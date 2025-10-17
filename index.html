@@ -388,17 +388,17 @@
 				// Reactive Watchers
 				let watchers = {};
 				
-				function renderData(container, data, name, title, editable, normalize, onChange) {
+				function renderData(container, values, data, name, title, editable, normalize, onChange) {
 					if (model.display_mode == 'graph'){
-						renderGraph(container, data, name, title, editable, normalize, onChange);
+						renderGraph(container, values, data, name, title, editable, normalize, onChange);
 						} else if (model.display_mode == 'table') {
-							renderTable(container, data, name, title, editable, normalize, onChange);
+							renderTable(container, values,  data, name, title, editable, normalize, onChange);
 							} else {
 								console.log('Error: Unknown renderData mode', normalize, model.display_mode);
 							}
 						}
 						
-						function renderTable(container, data, name, title, editable, normalize, onChange){
+						function renderTable(container, values, data, name, title, editable, normalize, onChange){
 							const table = container.appendChild(document.createElement('table'));
 							table.className = 'data-table';
 							const header = table.appendChild(document.createElement('tr'));
@@ -406,13 +406,10 @@
 							for (let n=0; n<data.length; n++){
 								let row = table.appendChild(document.createElement('tr'));
 								if (!editable) {
-									console.log('normal table row');
-									row.innerHTML = `<td><strong>${n}</strong></td><td>${(data[n] * 100).toFixed(2)}%</td>`;
-									
+									row.innerHTML = `<td><strong>${values[n]}</strong></td><td>${(data[n] * 100).toFixed(2)}%</td>`;
 									} else {
-										console.log('editable table row');
 										const value = row.appendChild(document.createElement('td'));
-										value.innerHTML = `<strong>${n}</strong>`;
+										value.innerHTML = `<strong>${values[n]}</strong>`;
 										const probCell = row.appendChild(document.createElement('td'));
 										const prob = probCell.appendChild(document.createElement('input'));
 										
@@ -429,7 +426,6 @@
 												new_data[n] = newval;
 												return onChange(new_data);
 											}
-											console.log('normalizeing');
 											new_data = data.map((v) => v * (1-newval)/(1-data[n]));
 											new_data[n] = newval;
 											onChange(new_data);
@@ -439,8 +435,8 @@
 								}
 								
 								// Render functions
-								function renderGraph(container, data, name, title, editable, normalize, _onChange) {
-									onChange = normalize ? (change) => _onChange(normalizer(change)) : _onChange;
+								function renderGraph(container, values, data, name, title, editable, normalize, _onChange) {
+									const onChange = normalize ? (change) => _onChange(normalizer(change)) : _onChange;
 									const width = 500;
 									const height = 400;
 									const padding = 40;
@@ -586,7 +582,7 @@
 															label.setAttribute('font-size', '10');
 															label.setAttribute('fill', 'gray');
 															label.setAttribute('text-anchor', 'middle');
-															label.textContent = i;
+															label.textContent = values[i];
 															svg.appendChild(label);
 															});
 															
@@ -655,15 +651,15 @@
 																		param.numValues = n;
 																		param.initialPrior = new Array(n).fill(1 / n);
 																		param.updates = [];
-																		recalculatePosteriors(param);
+																		recalculateAllPosteriors();
 																		render();
 																		});
 																		leftCol.appendChild(numInput);
 																		
 																		const graphContainer = document.createElement('div');
-																		renderData(graphContainer, param.initialPrior, param.name, 'Prior', true, true, (newPrior) => {
+																		renderData(graphContainer, param.valueNames, param.initialPrior, param.name, 'Prior', true, true, (newPrior) => {
 																			param.initialPrior = newPrior;
-																			recalculatePosteriors(param);
+																			recalculateAllPosteriors();
 																			render();
 																			});
 																			leftCol.appendChild(graphContainer);
@@ -671,503 +667,579 @@
 																			grid.appendChild(leftCol);
 																			
 																			// Middle column: Empty
-																			const midCol = document.createElement('div');
+																			const midCol = grid.appendChild(document.createElement('div'));
 																			midCol.className = 'column';
-																			const emptyDiv = document.createElement('div');
-																			emptyDiv.className = 'empty-center';
-																			emptyDiv.textContent = 'No likelihood for initial prior';
-																			midCol.appendChild(emptyDiv);
-																			grid.appendChild(midCol);
-																			
-																			// Right column: Description
-																			const rightCol = document.createElement('div');
-																			rightCol.className = 'column';
-																			
-																			const descTitle = document.createElement('div');
-																			descTitle.className = 'column-title';
-																			descTitle.textContent = 'Description';
-																			rightCol.appendChild(descTitle);
-																			
-																			const descTextarea = document.createElement('textarea');
-																			descTextarea.className = 'input-field';
-																			descTextarea.placeholder = 'Describe your analysis...';
-																			descTextarea.value = param.description;
-																			descTextarea.style.minHeight = '250px';
-																			descTextarea.addEventListener('input', (e) => {
-																				param.description = e.target.value;
-																				});
-																				rightCol.appendChild(descTextarea);
-																				
-																				grid.appendChild(rightCol);
-																				container.appendChild(grid);
-																				
-																				return container;
-																			}
-																			
-																			function renderDependencyRow(param, update, index){
-																				
-																				const container = document.createElement('div');
-																				const headercard = document.createElement('div');
-																				headercard.className = 'row-card';
-																				
-																				const deleteBtn = document.createElement('button');
-																				deleteBtn.className = 'delete-btn';
-																				deleteBtn.textContent = '✕';
-																				deleteBtn.onclick = () => {
-																					param.updates.splice(index, 1);
-																					render();
-																					};
-																					headercard.appendChild(deleteBtn);
+																			const emptyDiv = midCol.appendChild(document.createElement('div'));
+																			const nameTable = emptyDiv.appendChild(document.createElement('table'));
+																			nameTable.className = 'data-table';
+																			const param_table_header = nameTable.appendChild(document.createElement('tr'));
+																			const param_table_header_title = param_table_header.appendChild(document.createElement('th'));
+																			param_table_header_title.textContent = "Paramiter Values";
+																			for (let n = 0; n<param.numValues; n++) {
+																				const row = nameTable.appendChild(document.createElement('tr'));
+																				const cell = row.appendChild(document.createElement('td'));
+																				const input = cell.appendChild(document.createElement('input'));
+																				input.className = 'input-field';
+																				input.value = param.valueNames[n];
+																				input.addEventListener('input', (e) => {
+																					param.valueNames[n] = e.target.value;
+																					input.setAttribute('data-prompt', 'true');
+																					});
 																					
-																					const header = document.createElement('div');
-																					header.className = 'row-header';
+																					input.addEventListener('keydown', (event) => {
+																						if (event.key == 'Enter') {
+																							input.removeAttribute('data-prompt');
+																							render();
+																						}
+																						});
+																					}
 																					
-																					set_dependency_target = (new_param) => {
-																						if (new_param.updates[index].target) {
-																							let target_uuid = new_param.updates[index].target;
-																							let target = model.paramiters.get(target_uuid);
-																							header.innerHTML= `<strong>Dependence on </strong> <i>${target.name}</i>`;
-																							} else {
-																								header.textContent = "";
-																								const selector = document.createElement('ul');
-																								for (const [uuid, param] of model.paramiters) {
-																									if (uuid == new_param.uuid) { continue; }
-																									const item = document.createElement('button');
-																									item.textContent = param.name;
-																									item.value = uuid;
-																									item.onclick = () => {
-																										new_param.updates[index].target = uuid;
-																										new_param.updates[index].implication_matrix = Array.from(Array(new_param.numValues), () => new Array(model.paramiters.get(uuid).numValues).fill(1.0));
-																										recalculatePosteriors(new_param);
-																										render();
+																					// Right column: Description
+																					const rightCol = document.createElement('div');
+																					rightCol.className = 'column';
+																					
+																					const descTitle = document.createElement('div');
+																					descTitle.className = 'column-title';
+																					descTitle.textContent = 'Description';
+																					rightCol.appendChild(descTitle);
+																					
+																					const descTextarea = document.createElement('textarea');
+																					descTextarea.className = 'input-field';
+																					descTextarea.placeholder = 'Describe your analysis...';
+																					descTextarea.value = param.description;
+																					descTextarea.style.minHeight = '250px';
+																					descTextarea.addEventListener('input', (e) => {
+																						param.description = e.target.value;
+																						});
+																						rightCol.appendChild(descTextarea);
+																						
+																						grid.appendChild(rightCol);
+																						container.appendChild(grid);
+																						
+																						return container;
+																					}
+																					
+																					function hasCyclicDependency(fromUuid, toUuid) {
+																						const visited = new Set();
+																						const recursionStack = new Set();
+																						
+																						function detectCycle(uuid) {
+																							if (recursionStack.has(uuid)) return true;
+																							if (visited.has(uuid)) return false;
+																							
+																							visited.add(uuid);
+																							recursionStack.add(uuid);
+																							
+																							const param_of_uuid = model.paramiters.get(uuid);
+																							if (param_of_uuid) {
+																								for (const update of param_of_uuid.updates) {
+																									if (update.type === 'dependency' && update.target) {
+																										if (detectCycle(update.target)) return true;
 																									}
-																									selector.appendChild(item);
-																									};
-																									header.replaceChildren(selector);
-																									};};
-																									watchers[param.updates[index].uuid].push(set_dependency_target);
-																									set_dependency_target(param);
-																									
-																									headercard.appendChild(header);
-																									
-																									if (update.target == null) {return headercard;}
-																									
-																									const target_uuid = update.target;
-																									const target = model.paramiters.get(target_uuid);
-																									
-																									const grid = document.createElement('div');
-																									grid.className = 'row-grid';
-																									
-																									const leftCol = document.createElement('div');
-																									
-																									const posteriorTitle = document.createElement('div');
-																									posteriorTitle.className = 'column-title';
-																									posteriorTitle.textContent = 'Prior → Posterior';
-																									leftCol.appendChild(posteriorTitle);
-																									
-																									const posteriorheadercard = document.createElement('div');
-																									renderData(posteriorheadercard, update.posterior, param.name, 'Posterior', false, false, null);
-																									leftCol.appendChild(posteriorheadercard);
-																									
-																									grid.appendChild(leftCol);
-																									
-																									const middleCol = document.createElement('div');
-																									
-																									const posteriorDependencieTitle = document.createElement('div');
-																									posteriorDependencieTitle.className = 'column-title';
-																									posteriorDependencieTitle.textContent = 'Posterior Dependencie';
-																									middleCol.appendChild(posteriorDependencieTitle);
-																									
-																									const posteriorDependencieheadercard = document.createElement('div');
-																									renderData(posteriorDependencieheadercard, target.finalPosterior, target.name, `${target.name} Posterior`, false, false, null);
-																									middleCol.appendChild(posteriorDependencieheadercard);
-																									
-																									grid.appendChild(middleCol);
-																									
-																									const rightCol = document.createElement('div');
-																									grid.appendChild(rightCol);
-																									
-																									headercard.appendChild(grid);
-																									container.appendChild(headercard);
-																									
-																									for (let n=0; n < target.numValues; n++ ){
-																										const implication_card = document.createElement('div');
-																										container.appendChild(implication_card);
-																										implication_card.className = 'row-card';
-																										
-																										const header = document.createElement('div');
-																										implication_card.appendChild(header);
-																										header.className = 'row-header';
-																										header.textContent = `Implication of ${target.name} = ${n}`
-																										
-																										const grid = document.createElement('grid');
-																										implication_card.appendChild(grid);
-																										
-																										const column_1 = document.createElement('div');
-																										grid.appendChild(column_1);
-																										column_1.className = 'column'
-																										
-																										const column_2 = document.createElement('div');
-																										grid.appendChild(column_2);
-																										column_2.className = 'column'
-																										
-																										const implication_data = Array(param.numValues);
-																										for (let j=0; j<param.numValues; j++) {
-																											implication_data[j] = param.updates[index].implication_matrix[j][n];
-																										}
-																										renderData(column_1, implication_data, param.name, 'Given the value what is the effect', true, false, (new_implication) => {
-																											for (let j=0; j<param.numValues; j++) {
-																												param.updates[index].implication_matrix[j][n] = new_implication[j];
+																								}
+																							}
+																							
+																							recursionStack.delete(uuid);
+																							return false;
+																						}
+																						
+																						return detectCycle(toUuid) || (toUuid === fromUuid);
+																					}
+																					
+																					function renderDependencyRow(param, update, index){
+																						
+																						const container = document.createElement('div');
+																						const headercard = document.createElement('div');
+																						headercard.className = 'row-card';
+																						
+																						const deleteBtn = document.createElement('button');
+																						deleteBtn.className = 'delete-btn';
+																						deleteBtn.textContent = '✕';
+																						deleteBtn.onclick = () => {
+																							param.updates.splice(index, 1);
+																							render();
+																							};
+																							headercard.appendChild(deleteBtn);
+																							
+																							const header = document.createElement('div');
+																							header.className = 'row-header';
+																							
+																							set_dependency_target = (new_param) => {
+																								if (new_param.updates[index].target) {
+																									let target_uuid = new_param.updates[index].target;
+																									let target = model.paramiters.get(target_uuid);
+																									header.innerHTML= `<strong>Dependence on </strong> <i>${target.name}</i>`;
+																									} else {
+																										header.textContent = "";
+																										const selector = document.createElement('ul');
+																										for (const [uuid, param] of model.paramiters) {
+																											if (uuid == new_param.uuid) { continue; }
+																											if (hasCyclicDependency(new_param.uuid, uuid)) {continue;}
+																											const item = document.createElement('button');
+																											item.textContent = param.name;
+																											item.value = uuid;
+																											item.onclick = () => {
+																												new_param.updates[index].target = uuid;
+																												new_param.updates[index].implication_matrix = Array.from(Array(new_param.numValues), () => new Array(model.paramiters.get(uuid).numValues).fill(1.0));
+																												recalculateAllPosteriors();
+																												render();
 																											}
-																											recalculatePosteriors(param);
-																											render();
-																											});
-																											
-																										}
-																										
-																										return container;
-																									}
-																									
-																									function renderEvidenceRow(param, update, index) {
-																										const container = document.createElement('div');
-																										container.className = 'row-card';
-																										
-																										const deleteBtn = document.createElement('button');
-																										deleteBtn.className = 'delete-btn';
-																										deleteBtn.textContent = '✕';
-																										deleteBtn.onclick = () => {
-																											param.updates.splice(index, 1);
-																											recalculatePosteriors(param);
-																											render();
+																											selector.appendChild(item);
 																											};
-																											container.appendChild(deleteBtn);
+																											header.replaceChildren(selector);
+																											};};
+																											watchers[param.updates[index].uuid].push(set_dependency_target);
+																											set_dependency_target(param);
 																											
-																											const header = document.createElement('div');
-																											header.className = 'row-header';
-																											<!-- header.textContent = `Evidence ${index + 1}`; -->
-																											update_title = (new_param) => {header.textContent = `${new_param.updates[index].title}`};
-																											watchers[param.updates[index].uuid].push(update_title);
-																											update_title(param);
-																											container.appendChild(header);
+																											headercard.appendChild(header);
+																											
+																											if (update.target == null) {return headercard;}
+																											
+																											const target_uuid = update.target;
+																											const target = model.paramiters.get(target_uuid);
 																											
 																											const grid = document.createElement('div');
 																											grid.className = 'row-grid';
 																											
-																											// Left column: Posterior
 																											const leftCol = document.createElement('div');
-																											leftCol.className = 'column';
 																											
 																											const posteriorTitle = document.createElement('div');
 																											posteriorTitle.className = 'column-title';
 																											posteriorTitle.textContent = 'Prior → Posterior';
 																											leftCol.appendChild(posteriorTitle);
 																											
-																											const posteriorContainer = document.createElement('div');
-																											renderData(posteriorContainer, update.posterior, param.name, 'Posterior', false, false, null);
-																											leftCol.appendChild(posteriorContainer);
+																											const posteriorheadercard = document.createElement('div');
+																											renderData(posteriorheadercard, param.valueNames, update.posterior, param.name, 'Posterior', false, false, null);
+																											leftCol.appendChild(posteriorheadercard);
 																											
 																											grid.appendChild(leftCol);
 																											
-																											// Middle column: Likelihood
-																											const midCol = document.createElement('div');
-																											midCol.className = 'column';
+																											const middleCol = document.createElement('div');
 																											
-																											const likelihoodTitle = document.createElement('div');
-																											likelihoodTitle.className = 'column-title';
-																											likelihoodTitle.textContent = 'Likelihood (The Probability of the evidence given each paremiter vlaue)';
-																											midCol.appendChild(likelihoodTitle);
+																											const posteriorDependencieTitle = document.createElement('div');
+																											posteriorDependencieTitle.className = 'column-title';
+																											posteriorDependencieTitle.textContent = 'Posterior Dependencie';
+																											middleCol.appendChild(posteriorDependencieTitle);
 																											
-																											const likelihoodContainer = document.createElement('div');
-																											renderData(likelihoodContainer, update.likelihood, param.name, 'Likelihood', true, false,(newLikelihood) => {
-																												param.updates[index].likelihood = newLikelihood;
-																												recalculatePosteriors(param);
-																												render();
-																												});
-																												midCol.appendChild(likelihoodContainer);
+																											const posteriorDependencieheadercard = document.createElement('div');
+																											renderData(posteriorDependencieheadercard, target.valueNames, target.finalPosterior, target.name, `${target.name} Posterior`, false, false, null);
+																											middleCol.appendChild(posteriorDependencieheadercard);
+																											
+																											grid.appendChild(middleCol);
+																											
+																											const rightCol = document.createElement('div');
+																											grid.appendChild(rightCol);
+																											
+																											headercard.appendChild(grid);
+																											container.appendChild(headercard);
+																											
+																											for (let n=0; n < target.numValues; n++ ){
+																												const implication_card = document.createElement('div');
+																												container.appendChild(implication_card);
+																												implication_card.className = 'row-card';
 																												
-																												grid.appendChild(midCol);
+																												const header = document.createElement('div');
+																												implication_card.appendChild(header);
+																												header.className = 'row-header';
+																												header.textContent = `Implication of ${target.name} = ${n}`
 																												
-																												// Right column: Notes
-																												const rightCol = document.createElement('div');
-																												rightCol.className = 'column';
+																												const grid = document.createElement('grid');
+																												implication_card.appendChild(grid);
 																												
-																												const notesTitle = document.createElement('div');
-																												notesTitle.className = 'column-title';
-																												notesTitle.textContent = 'Evidence Information';
-																												rightCol.appendChild(notesTitle);
+																												const column_1 = document.createElement('div');
+																												grid.appendChild(column_1);
+																												column_1.className = 'column'
 																												
-																												const titleInput = document.createElement('input');
-																												titleInput.type = 'text';
-																												titleInput.className = 'input-field';
-																												titleInput.placeholder = 'Evidence title...';
-																												titleInput.value = update.title;
-																												titleInput.style.fontWeight = '600';
-																												titleInput.addEventListener('input', (e) => {
-																													param.updates[index].title = e.target.value;
-																													watchers[param.updates[index].uuid].map((updater) => updater(param));
-																													});
-																													rightCol.appendChild(titleInput);
-																													
-																													const descTextarea = document.createElement('textarea');
-																													descTextarea.className = 'input-field';
-																													descTextarea.placeholder = 'Reasoning for this update...';
-																													descTextarea.value = update.description;
-																													descTextarea.style.minHeight = '180px';
-																													descTextarea.addEventListener('input', (e) => {
-																														param.updates[index].description = e.target.value;
-																														});
-																														rightCol.appendChild(descTextarea);
-																														
-																														grid.appendChild(rightCol);
-																														container.appendChild(grid);
-																														
-																														return container;
+																												const column_2 = document.createElement('div');
+																												grid.appendChild(column_2);
+																												column_2.className = 'column'
+																												
+																												const implication_data = Array(param.numValues);
+																												for (let j=0; j<param.numValues; j++) {
+																													implication_data[j] = param.updates[index].implication_matrix[j][n];
+																												}
+																												renderData(column_1, param.valueNames, implication_data, param.name, 'Given the value what is the effect', true, false, (new_implication) => {
+																													for (let j=0; j<param.numValues; j++) {
+																														param.updates[index].implication_matrix[j][n] = new_implication[j];
 																													}
+																													recalculateAllPosteriors();
+																													render();
+																													});
 																													
-																													function recalculatePosteriors(param) {
+																												}
+																												
+																												return container;
+																											}
+																											
+																											function renderEvidenceRow(param, update, index) {
+																												const container = document.createElement('div');
+																												container.className = 'row-card';
+																												
+																												const deleteBtn = document.createElement('button');
+																												deleteBtn.className = 'delete-btn';
+																												deleteBtn.textContent = '✕';
+																												deleteBtn.onclick = () => {
+																													param.updates.splice(index, 1);
+																													recalculateAllPosteriors();
+																													render();
+																													};
+																													container.appendChild(deleteBtn);
+																													
+																													const header = document.createElement('div');
+																													header.className = 'row-header';
+																													<!-- header.textContent = `Evidence ${index + 1}`; -->
+																													update_title = (new_param) => {header.textContent = `${new_param.updates[index].title}`};
+																													watchers[param.updates[index].uuid].push(update_title);
+																													update_title(param);
+																													container.appendChild(header);
+																													
+																													const grid = document.createElement('div');
+																													grid.className = 'row-grid';
+																													
+																													// Left column: Posterior
+																													const leftCol = document.createElement('div');
+																													leftCol.className = 'column';
+																													
+																													const posteriorTitle = document.createElement('div');
+																													posteriorTitle.className = 'column-title';
+																													posteriorTitle.textContent = 'Prior → Posterior';
+																													leftCol.appendChild(posteriorTitle);
+																													
+																													const posteriorContainer = document.createElement('div');
+																													renderData(posteriorContainer, param.valueNames, update.posterior, param.name, 'Posterior', false, false, null);
+																													leftCol.appendChild(posteriorContainer);
+																													
+																													grid.appendChild(leftCol);
+																													
+																													// Middle column: Likelihood
+																													const midCol = document.createElement('div');
+																													midCol.className = 'column';
+																													
+																													const likelihoodTitle = document.createElement('div');
+																													likelihoodTitle.className = 'column-title';
+																													likelihoodTitle.textContent = 'Likelihood (The Probability of the evidence given each paremiter vlaue)';
+																													midCol.appendChild(likelihoodTitle);
+																													
+																													const likelihoodContainer = document.createElement('div');
+																													const myindex = index;
+																													renderData(likelihoodContainer, param.valueNames, update.likelihood, param.name, 'Likelihood', true, false, (newLikelihood) => {
+																														console.log('moveing...', myindex, param.name, update.title);
+																														param.updates[myindex].likelihood = newLikelihood;
+																														recalculateAllPosteriors();
+																														render();
+																														});
+																														midCol.appendChild(likelihoodContainer);
 																														
-																														for (let i = 0; i < param.updates.length; i++) {
-																															const prior = i === 0 ? param.initialPrior : param.updates[i - 1].posterior;
-																															let likelihood = null;
+																														grid.appendChild(midCol);
+																														
+																														// Right column: Notes
+																														const rightCol = document.createElement('div');
+																														rightCol.className = 'column';
+																														
+																														const notesTitle = document.createElement('div');
+																														notesTitle.className = 'column-title';
+																														notesTitle.textContent = 'Evidence Information';
+																														rightCol.appendChild(notesTitle);
+																														
+																														const titleInput = document.createElement('input');
+																														titleInput.type = 'text';
+																														titleInput.className = 'input-field';
+																														titleInput.placeholder = 'Evidence title...';
+																														titleInput.value = update.title;
+																														titleInput.style.fontWeight = '600';
+																														titleInput.addEventListener('input', (e) => {
+																															param.updates[index].title = e.target.value;
+																															watchers[param.updates[index].uuid].map((updater) => updater(param));
+																															});
+																															rightCol.appendChild(titleInput);
 																															
-																															if (param.updates[i].type == 'evidence') {
-																																likelihood = param.updates[i].likelihood;
+																															const descTextarea = document.createElement('textarea');
+																															descTextarea.className = 'input-field';
+																															descTextarea.placeholder = 'Reasoning for this update...';
+																															descTextarea.value = update.description;
+																															descTextarea.style.minHeight = '180px';
+																															descTextarea.addEventListener('input', (e) => {
+																																param.updates[index].description = e.target.value;
+																																});
+																																rightCol.appendChild(descTextarea);
 																																
-																																} else if (param.updates[i].type == 'dependency') {
-																																	const target_uuid = param.updates[i].target;
-																																	const target = model.paramiters.get(target_uuid);
-																																	const I = param.updates[i].implication_matrix;
-																																	const M = target.numValues;
-																																	const N = param.numValues;
-																																	likelihood = new Array(N).fill(0);
-																																	for (let m=0; m<M; m++) {
-																																		for (let n=0; n<N; n++) {
-																																			likelihood[n] += target.finalPosterior[m] * I[n][m];
-																																		}
+																																grid.appendChild(rightCol);
+																																container.appendChild(grid);
+																																
+																																return container;
+																															}
+																															
+																															function recalculateAllPosteriors() {
+																																// Build dependency graph to determine calculation order
+																																const calcOrder = [];
+																																const visited = new Set();
+																																
+																																function visit(uuid) {
+																																	if (visited.has(uuid)) return;
+																																	visited.add(uuid);
+																																	
+																																	model.paramiters.get(uuid).updates.forEach(update => {
+																																		if (update.type === 'dependency' && update.target) { visit(update.target); }
+																																		});
+																																		
+																																		calcOrder.push(uuid);
 																																	}
 																																	
-																																	} else {
-																																		console.log(`Error: Unrecognised update type ${param.updates[i].type}`);
-																																		return;
-																																	}
-																																	
-																																	param.updates[i].posterior = updatePosterior(prior, likelihood);
+																																	model.paramiters.forEach((_, uuid) => visit(uuid));
+																																	calcOrder.forEach(uuid => recalculatePosteriors(model.paramiters.get(uuid)));
 																																}
 																																
-																																if (param.updates.length != 0) {
-																																	param.finalPosterior = param.updates[param.updates.length-1].posterior;
-																																	} else {
-																																		param.finalPosterior = param.initialPrior;
-																																	}
-																																}
-																																
-																																function render() {
-																																	const mainContent = document.getElementById('mainContent');
-																																	mainContent.innerHTML = '';
+																																function recalculatePosteriors(param) {
 																																	
-																																	// Project title sync
-																																	let active_paramiter = null;
-																																	
-																																	document.getElementById('projectTitle').value = model.projectTitle;
-																																	tab_bar = document.getElementById('tab-bar');
-																																	tab_bar.innerHTML = '';
-																																	for (const [uuid, param] of model.paramiters) {
-																																		param.updates.forEach((update) => watchers[update.uuid] = []);
-																																		button = document.createElement('button');
-																																		button.id = uuid;
-																																		button.textContent = param.name;
-																																		button.addEventListener('click', () => {model.active_paramiter = uuid; render();});
-																																		if (model.active_paramiter == uuid){
-																																			button.classList.add('active');
-																																			active_paramiter = param;
-																																		}
-																																		tab_bar.appendChild(button);
-																																	}
-																																	
-																																	button = document.createElement('button');
-																																	button.id = 'addParam';
-																																	button.classList.add('tool');
-																																	button.addEventListener('click',addParamiter);
-																																	button.textContent = '+ Add Paramiter'
-																																	tab_bar.appendChild(button);
-																																	// clear watchers
-																																	
-																																	if (active_paramiter) {
-																																		// Render initial setup
-																																		mainContent.appendChild(renderInitialSetup(active_paramiter));
+																																	for (let i = 0; i < param.updates.length; i++) {
+																																		const prior = i === 0 ? param.initialPrior : param.updates[i - 1].posterior;
+																																		let likelihood = null;
 																																		
-																																		// Render updates
-																																		active_paramiter.updates.forEach((update, index) => {
-																																			if (update.type == 'evidence') {mainContent.appendChild(renderEvidenceRow(active_paramiter, update, index));}
-																																			if (update.type == 'dependency') {mainContent.appendChild(renderDependencyRow(active_paramiter, update, index));}
-																																			});
+																																		if (param.updates[i].type == 'evidence') {
+																																			likelihood = param.updates[i].likelihood;
 																																			
-																																			// Add evidence button
-																																			const addContainer = document.createElement('div');
-																																			addContainer.className = 'add-update-container';
-																																			const addBtnE = document.createElement('button');
-																																			addBtnE.className = 'btn btn-add';
-																																			addBtnE.textContent = '+ Add Evidence';
-																																			addBtnE.style.margin = '5px';
-																																			addBtnE.onclick = () => addEvidence(active_paramiter);
-																																			addContainer.appendChild(addBtnE);
-																																			
-																																			// Add Dependency button
-																																			addContainer.className = 'add-update-container';
-																																			const addBtnC = document.createElement('button');
-																																			addBtnC.className = 'btn btn-add';
-																																			addBtnC.textContent = '+ Add Dependence';
-																																			addBtnC.style.margin = '5px';
-																																			addBtnC.onclick = () => addDependency(active_paramiter);
-																																			addContainer.appendChild(addBtnC);
-																																			
-																																			mainContent.appendChild(addContainer);
-																																			
-																																			} else {
-																																				addParamiter();
-																																				render();
-																																			}
-																																		}
-																																		
-																																		function addEvidence(param) {
-																																			const prevPosterior = param.updates.length > 0
-																																			? param.updates[param.updates.length - 1].posterior
-																																			: param.initialPrior;
-																																			
-																																			const newEvidence = {
-																																				type: 'evidence',
-																																				title: `Evidence ${param.updates.length + 1}`,
-																																				description: '',
-																																				likelihood: new Array(param.numValues).fill(1),
-																																				posterior: prevPosterior,
-																																				uuid: crypto.randomUUID(),
-																																				};
-																																				
-																																				watchers[newEvidence.uuid] = [];
-																																				
-																																				param.updates.push(newEvidence);
-																																				render();
-																																			}
-																																			
-																																			function addDependency(param){
-																																				const prevPosterior = param.updates.length > 0
-																																				? param.updates[param.updates.length - 1].posterior
-																																				: param.initialPrior;
-																																				
-																																				const Dependency = {
-																																					type: 'dependency',
-																																					target: null, // uuid of the target paramiter
-																																					implication_matrix: undefined, // NxM matrix where N is the number of values of the paramiter in the current paramiter, and M are thoes in the target paramiter
-																																					description: '',
-																																					posterior: prevPosterior,
-																																					uuid: crypto.randomUUID(),
-																																					};
-																																					watchers[Dependency.uuid] = [];
-																																					param.updates.push(Dependency);
-																																					render();
-																																				}
-																																				
-																																				let paramiter_count = 0;
-																																				function addParamiter() {
-																																					paramiter_count += 1;
-																																					const uuid = crypto.randomUUID();
-																																					const newParamiter = {
-																																						uuid: uuid,
-																																						name: `P-${paramiter_count}`,
-																																						numValues: 5,
-																																						initialPrior: [0.2, 0.2, 0.2, 0.2, 0.2],
-																																						finalPosterior: [0.2, 0.2, 0.2, 0.2, 0.2],
-																																						description: '',
-																																						updates: []
+																																			} else if (param.updates[i].type == 'dependency') {
+																																				const target_uuid = param.updates[i].target;
+																																				if (!target_uuid) {continue;}
+																																				const target = model.paramiters.get(target_uuid);
+																																				const I = param.updates[i].implication_matrix;
+																																				const M = target.numValues;
+																																				const N = param.numValues;
+																																				likelihood = new Array(N).fill(0);
+																																				for (let m=0; m<M; m++) {
+																																					for (let n=0; n<N; n++) {
+																																						likelihood[n] += target.finalPosterior[m] * I[n][m];
 																																					}
-																																					model.paramiters.set(uuid, newParamiter);
-																																					model.active_paramiter = uuid;
-																																					render();
 																																				}
 																																				
-																																				// Event listeners
-																																				document.getElementById('projectTitle').addEventListener('input', (e) => {
-																																					model.projectTitle = e.target.value;
-																																					});
+																																				} else {
+																																					console.log(`Error: Unrecognised update type ${param.updates[i].type}`);
+																																					return;
+																																				}
+																																				
+																																				param.updates[i].posterior = updatePosterior(prior, likelihood);
+																																			}
+																																			
+																																			if (param.updates.length != 0) {
+																																				param.finalPosterior = param.updates[param.updates.length-1].posterior;
+																																				} else {
+																																					param.finalPosterior = param.initialPrior;
 																																					
-																																					document.getElementById('viewModeBtn').addEventListener('click', () => {
-																																						model.display_mode = model.display_mode == 'graph' ? 'table' : 'graph';
-																																						render();
+																																				}
+																																				watchers[param.uuid]?.forEach(updater => updater(param));
+																																			}
+																																			
+																																			function render() {
+																																				const mainContent = document.getElementById('mainContent');
+																																				mainContent.innerHTML = '';
+																																				
+																																				// Project title sync
+																																				let active_paramiter = null;
+																																				
+																																				document.getElementById('projectTitle').value = model.projectTitle;
+																																				tab_bar = document.getElementById('tab-bar');
+																																				tab_bar.innerHTML = '';
+																																				for (const [uuid, param] of model.paramiters) {
+																																					param.updates.forEach((update) => watchers[update.uuid] = []);
+																																					watchers[uuid] = watchers[uuid] || [];
+																																					button = document.createElement('button');
+																																					button.id = uuid;
+																																					button.textContent = param.name;
+																																					button.addEventListener('click', () => {model.active_paramiter = uuid; render();});
+																																					if (model.active_paramiter == uuid){
+																																						button.classList.add('active');
+																																						active_paramiter = param;
+																																					}
+																																					tab_bar.appendChild(button);
+																																				}
+																																				
+																																				button = document.createElement('button');
+																																				button.id = 'addParam';
+																																				button.classList.add('tool');
+																																				button.addEventListener('click',addParamiter);
+																																				button.textContent = '+ Add Paramiter'
+																																				tab_bar.appendChild(button);
+																																				// clear watchers
+																																				
+																																				if (active_paramiter) {
+																																					// Render initial setup
+																																					mainContent.appendChild(renderInitialSetup(active_paramiter));
+																																					
+																																					// Render updates
+																																					active_paramiter.updates.forEach((update, index) => {
+																																						if (update.type == 'evidence') {mainContent.appendChild(renderEvidenceRow(active_paramiter, update, index));}
+																																						if (update.type == 'dependency') {mainContent.appendChild(renderDependencyRow(active_paramiter, update, index));}
 																																						});
 																																						
-																																						document.getElementById('copyBtn').addEventListener('click', () => {
-																																							navigator.clipboard.writeText(JSON.stringify(model, (key, value) => {
-																																								return (value instanceof Map) ? Array.from(value.entries()) : value;
-																																								}, 2));
+																																						// Add evidence button
+																																						const addContainer = document.createElement('div');
+																																						addContainer.className = 'add-update-container';
+																																						const addBtnE = document.createElement('button');
+																																						addBtnE.className = 'btn btn-add';
+																																						addBtnE.textContent = '+ Add Evidence';
+																																						addBtnE.style.margin = '5px';
+																																						addBtnE.onclick = () => addEvidence(active_paramiter);
+																																						addContainer.appendChild(addBtnE);
+																																						
+																																						// Add Dependency button
+																																						addContainer.className = 'add-update-container';
+																																						const addBtnC = document.createElement('button');
+																																						addBtnC.className = 'btn btn-add';
+																																						addBtnC.textContent = '+ Add Dependence';
+																																						addBtnC.style.margin = '5px';
+																																						addBtnC.onclick = () => addDependency(active_paramiter);
+																																						addContainer.appendChild(addBtnC);
+																																						
+																																						mainContent.appendChild(addContainer);
+																																						
+																																						} else {
+																																							addParamiter();
+																																							render();
+																																						}
+																																					}
+																																					
+																																					function addEvidence(param) {
+																																						const prevPosterior = param.updates.length > 0
+																																						? param.updates[param.updates.length - 1].posterior
+																																						: param.initialPrior;
+																																						
+																																						const newEvidence = {
+																																							type: 'evidence',
+																																							title: `Evidence ${param.updates.length + 1}`,
+																																							description: '',
+																																							likelihood: new Array(param.numValues).fill(1),
+																																							posterior: prevPosterior,
+																																							uuid: crypto.randomUUID(),
+																																							};
+																																							
+																																							watchers[newEvidence.uuid] = [];
+																																							
+																																							param.updates.push(newEvidence);
+																																							recalculateAllPosteriors();
+																																							render();
+																																						}
+																																						
+																																						function addDependency(param){
+																																							const prevPosterior = param.updates.length > 0
+																																							? param.updates[param.updates.length - 1].posterior
+																																							: param.initialPrior;
+																																							
+																																							const Dependency = {
+																																								type: 'dependency',
+																																								target: null, // uuid of the target paramiter
+																																								implication_matrix: undefined, // NxM matrix where N is the number of values of the paramiter in the current paramiter, and M are thoes in the target paramiter
+																																								description: '',
+																																								posterior: prevPosterior,
+																																								uuid: crypto.randomUUID(),
+																																								};
+																																								watchers[Dependency.uuid] = [];
+																																								param.updates.push(Dependency);
+																																								recalculateAllPosteriors();
+																																								render();
+																																							}
+																																							
+																																							let paramiter_count = 0;
+																																							function addParamiter() {
+																																								paramiter_count += 1;
+																																								const uuid = crypto.randomUUID();
+																																								const newParamiter = {
+																																									uuid: uuid,
+																																									name: `P-${paramiter_count}`,
+																																									numValues: 5,
+																																									valueNames: ['0','1','2','3','4'],
+																																									initialPrior: [0.2, 0.2, 0.2, 0.2, 0.2],
+																																									finalPosterior: [0.2, 0.2, 0.2, 0.2, 0.2],
+																																									description: '',
+																																									updates: []
+																																								}
+																																								model.paramiters.set(uuid, newParamiter);
+																																								model.active_paramiter = uuid;
+																																								render();
+																																							}
+																																							
+																																							// Event listeners
+																																							document.getElementById('projectTitle').addEventListener('input', (e) => {
+																																								model.projectTitle = e.target.value;
 																																								});
 																																								
-																																								document.getElementById('pasteBtn').addEventListener('click', async () => {
-																																									try {
-																																										const text = await navigator.clipboard.readText();
-																																										model = JSON.parse(text);
-																																										model.paramiters = new Map(model.paramiters);
-																																										model.paramiters.get(model.active_paramiter).updates.forEach((update) => watchers[update.uuid] = []);
-																																										render();
-																																										} catch (e) {
-																																											alert('Error loading from clipboard. Make sure you copied valid data.');
-																																											console.log(e)
-																																										}
-																																										});
-																																										
-																																										document.getElementById('resetBtn').addEventListener('click', () => {
-																																											if (confirm('Reset to a new project? This will clear all data.')) {
-																																												model = initial_model;
-																																												render();
-																																												} else {
-																																													console.log('Reset declined by user');
-																																												}
-																																												});
-																																												
-																																												// Global mouse handling for dragging
-																																												document.addEventListener('mousemove', (e) => {
-																																													if (!dragState) return;
+																																								document.getElementById('viewModeBtn').addEventListener('click', () => {
+																																									model.display_mode = model.display_mode == 'graph' ? 'table' : 'graph';
+																																									render();
+																																									});
+																																									
+																																									document.getElementById('copyBtn').addEventListener('click', () => {
+																																										navigator.clipboard.writeText(JSON.stringify(model, (key, value) => {
+																																											return (value instanceof Map) ? Array.from(value.entries()) : value;
+																																											}, 2));
+																																											});
+																																											
+																																											document.getElementById('pasteBtn').addEventListener('click', async () => {
+																																												try {
+																																													const text = await navigator.clipboard.readText();
+																																													model = JSON.parse(text);
+																																													model.paramiters = new Map(model.paramiters);
+																																													model.paramiters.get(model.active_paramiter).updates.forEach((update) => watchers[update.uuid] = []);
+																																													render();
+																																													} catch (e) {
+																																														alert('Error loading from clipboard. Make sure you copied valid data.');
+																																														console.log(e)
+																																													}
+																																													});
 																																													
-																																													const rect = dragState.svg.getBoundingClientRect();
-																																													const x = e.clientX - rect.left;
-																																													const y = e.clientY - rect.top;
-																																													const value = Math.min(1, Math.max(0, dragState.data[dragState.index] + (dragState.y - y) / 200));
-																																													
-																																													if (dragState.isShift) {
-																																														const newData = [...dragState.data];
-																																														for (let i = 0; i < dragState.data.length; i++) {
-																																															const pointX = dragState.scaleX(i);
-																																															const prevPointX = i > 0 ? dragState.scaleX(i - 1) :
-																																															dragState.scaleX(0) - (dragState.scaleX(1) - dragState.scaleX(0));
-																																															const nextPointX = i < dragState.data.length - 1 ? dragState.scaleX(i + 1) :
-																																															dragState.scaleX(dragState.data.length - 1) +
-																																															(dragState.scaleX(dragState.data.length - 1) - dragState.scaleX(dragState.data.length - 2));
-																																															
-																																															if (x >= (prevPointX + pointX) / 2 && x < (pointX + nextPointX) / 2) {
-																																																newData[i] = value;
+																																													document.getElementById('resetBtn').addEventListener('click', () => {
+																																														if (confirm('Reset to a new project? This will clear all data.')) {
+																																															model = initial_model;
+																																															render();
+																																															} else {
+																																																console.log('Reset declined by user');
 																																															}
-																																														}
-																																														dragState.onChange(newData);
-																																														} else {
-																																															const newData = [...dragState.data];
-																																															newData[dragState.index] = value;
-																																															dragState.onChange(newData);
-																																														}
-																																														});
-																																														
-																																														document.addEventListener('mouseup', () => {
-																																															dragState = null;
 																																															});
 																																															
-																																															document.addEventListener('keydown', (e) => {
-																																																if (e.key === 'Shift') isShiftPressed = true;
-																																																});
+																																															// Global mouse handling for dragging
+																																															document.addEventListener('mousemove', (e) => {
+																																																if (!dragState) return;
 																																																
-																																																document.addEventListener('keyup', (e) => {
-																																																	if (e.key === 'Shift') isShiftPressed = false;
+																																																const rect = dragState.svg.getBoundingClientRect();
+																																																const x = e.clientX - rect.left;
+																																																const y = e.clientY - rect.top;
+																																																const value = Math.min(1, Math.max(0, dragState.data[dragState.index] + (dragState.y - y) / 200));
+																																																
+																																																if (dragState.isShift) {
+																																																	const newData = [...dragState.data];
+																																																	for (let i = 0; i < dragState.data.length; i++) {
+																																																		const pointX = dragState.scaleX(i);
+																																																		const prevPointX = i > 0 ? dragState.scaleX(i - 1) :
+																																																		dragState.scaleX(0) - (dragState.scaleX(1) - dragState.scaleX(0));
+																																																		const nextPointX = i < dragState.data.length - 1 ? dragState.scaleX(i + 1) :
+																																																		dragState.scaleX(dragState.data.length - 1) +
+																																																		(dragState.scaleX(dragState.data.length - 1) - dragState.scaleX(dragState.data.length - 2));
+																																																		
+																																																		if (x >= (prevPointX + pointX) / 2 && x < (pointX + nextPointX) / 2) {
+																																																			newData[i] = value;
+																																																		}
+																																																	}
+																																																	dragState.onChange(newData);
+																																																	} else {
+																																																		const newData = [...dragState.data];
+																																																		newData[dragState.index] = value;
+																																																		dragState.onChange(newData);
+																																																	}
 																																																	});
 																																																	
-																																																	// Initial render
-																																																	render();
+																																																	document.addEventListener('mouseup', () => {
+																																																		dragState = null;
+																																																		});
+																																																		
+																																																		document.addEventListener('keydown', (e) => {
+																																																			if (e.key === 'Shift') isShiftPressed = true;
+																																																			});
+																																																			
+																																																			document.addEventListener('keyup', (e) => {
+																																																				if (e.key === 'Shift') isShiftPressed = false;
+																																																				});
+																																																				
+																																																				// Initial render
+																																																				render();
 		</script>
 	</body>
 </html>
