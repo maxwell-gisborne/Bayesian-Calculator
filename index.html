@@ -1,1096 +1,1129 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤔⚙️ Bayesian Reasoning Tool</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            background: #f9fafb;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .top-bar {
-            background: ForestGreen;
-            color: white;
-            padding: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>🤔⚙️ Bayesian Reasoning Tool</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+				background: #f9fafb;
+				height: 100vh;
+				display: flex;
+				flex-direction: column;
+			}
+			
+			.top-bar {
+				background: ForestGreen;
+				color: white;
+				padding: 1rem;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 1rem;
+			}
+			
+			#tab-bar {
+				background: #2db92d;
+				color: white;
+				padding:0;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+			}
+			
+			#tab-bar button {
+				background-color: inherit;
+				float: left;
+				border: none;
+				outline: none;
+				cursor: pointer;
+				padding: 14px 16px;
+				transition: 0.1s;
+			}
+			
+			#tab-bar button:hover {
+				background-color: #196719;
+			}
+			
+			#tab-bar button.active {
+				background-color: ForestGreen;
+			}
+			
+			#tab-bar button.tool {
+				float: right;
+				margin: 14;
+				background-color: inherit;
+				color: white;
+				border: none;
+				outline: none;
+				cursor: pointer;
+				transition: 0.1s;
+			}
+			
+			#tab-bar button.tool:hover {
+				background-color: #196719;
+			}
+			
+			.project-title {
+				font-size: 1.5rem;
+				font-weight: bold;
+				background: transparent;
+				border: none;
+				border-bottom: 2px solid rgba(255,255,255,0.3);
+				color: white;
+				padding: 0.25rem 0.5rem;
+				flex: 1;
+				max-width: 400px;
+				outline: none;
+			}
+			
+			.project-title:focus {
+				border-bottom-color: white;
+			}
+			
+			.top-bar-buttons {
+				display: flex;
+				gap: 0.5rem;
+			}
+			
+			.btn {
+				padding: 0.5rem 1rem;
+				border: none;
+				border-radius: 0.375rem;
+				cursor: pointer;
+				font-size: 0.875rem;
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				transition: background 0.2s;
+			}
+			
+			.btn-primary {
+				background: rgba(255,255,255,0.2);
+				color: white;
+			}
+			
+			.btn-primary:hover {
+				background: rgba(255,255,255,0.3);
+			}
+			
+			.btn-danger {
+				background: rgba(239, 68, 68, 0.8);
+				color: white;
+			}
+			
+			.btn-danger:hover {
+				background: rgb(239, 68, 68);
+			}
+			
+			.btn-secondary {
+				background: #e5e7eb;
+				color: #374151;
+			}
+			
+			.btn-secondary:hover {
+				background: #d1d5db;
+			}
+			
+			.btn-add {
+				background: ForestGreen;
+				color: white;
+				padding: 0.75rem 1.5rem;
+				font-weight: 600;
+			}
+			
+			.btn-add:hover {
+				background: #1d4ed8;
+			}
+			
+			.main-content {
+				flex: 1;
+				overflow-y: auto;
+				padding: 1rem;
+			}
+			
+			.row-card {
+				background: white;
+				border-radius: 0.5rem;
+				box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+				padding: 1rem;
+				margin-bottom: 1rem;
+				position: relative;
+			}
+			
+			.row-header {
+				font-size: 1.125rem;
+				font-weight: bold;
+				color: #1f2937;
+				margin-bottom: 1rem;
+			}
+			
+			.row-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr 1fr;
+				gap: 1rem;
+			}
+			
+			.column {
+				border-right: 1px solid #e5e7eb;
+				padding-right: 1rem;
+			}
+			
+			.column:last-child {
+				border-right: none;
+			}
+			
+			.column-title {
+				font-weight: 600;
+				margin-bottom: 0.5rem;
+				font-size: 0.875rem;
+			}
+			
+			.input-field {
+				width: 100%;
+				padding: 0.5rem;
+				border: 1px solid #d1d5db;
+				border-radius: 0.25rem;
+				margin-bottom: 0.5rem;
+				font-family: inherit;
+			}
+			
+			.input-field:focus {
+				outline: none;
+				border-color: #2563eb;
+			}
+			
+			.input-field[data-prompt="true"] {
+				border: 3px solid lightgrey;
+			}
+			
+			textarea.input-field {
+				resize: vertical;
+				min-height: 150px;
+				font-family: inherit;
+			}
+			
+			.graph-container {
+				background: #f9fafb;
+				border-radius: 0.25rem;
+				padding: 0.5rem;
+			}
+			
+			.graph-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 0.25rem;
+			}
+			
+			.graph-title {
+				font-size: 0.75rem;
+				color: #6b7280;
+			}
+			
+			.btn-reset {
+				font-size: 0.75rem;
+				padding: 0.125rem 0.5rem;
+			}
+			
+			.graph-svg {
+				border: 1px solid #d1d5db;
+				background: white;
+				display: block;
+			}
+			
+			.delete-btn {
+				position: absolute;
+				top: 0.5rem;
+				right: 0.5rem;
+				background: none;
+				border: none;
+				color: #ef4444;
+				font-size: 1.5rem;
+				cursor: pointer;
+				width: 2rem;
+				height: 2rem;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border-radius: 0.25rem;
+			}
+			
+			.delete-btn:hover {
+				background: #fee2e2;
+				color: #dc2626;
+			}
+			
+			.add-update-container {
+				margin-top: 1rem;
+				text-align: center;
+			}
+			
+			.empty-center {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				color: #9ca3af;
+				text-align: center;
+				min-height: 200px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="top-bar">
+			<input type="text" class="project-title" id="projectTitle" value="New Bayesian Analysis">
+			<div class="top-bar-buttons">
+				<button class="btn btn-primary" id="viewModeBtn">𝄜  Display Mode</button>
+				<button class="btn btn-primary" id="copyBtn">📋 Copy</button>
+				<button class="btn btn-primary" id="pasteBtn">📄 Paste</button>
+				<button class="btn btn-danger" id="resetBtn">🔄 Reset</button>
+			</div>
+		</div>
 
-        #tab-bar {
-            background: #2db92d;
-            color: white;
-            padding:0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+		<div id="tab-bar">
+		</div>
 
-        #tab-bar button {
-            background-color: inherit;
-            float: left;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            padding: 14px 16px;
-            transition: 0.1s;
-        }
+		<div class="main-content" id="mainContent"></div>
 
-        #tab-bar button:hover {
-            background-color: #196719;
-        }
-
-        #tab-bar button.active {
-            background-color: ForestGreen;
-        }
-
-        #tab-bar button.tool {
-            float: right;
-            margin: 14;
-            background-color: inherit;
-            color: white;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-
-        #tab-bar button.tool:hover {
-            background-color: #196719;
-        }
-        
-        .project-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            flex: 1;
-            max-width: 400px;
-            outline: none;
-        }
-        
-        .project-title:focus {
-            border-bottom-color: white;
-        }
-        
-        .top-bar-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background 0.2s;
-        }
-        
-        .btn-primary {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.8);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: rgb(239, 68, 68);
-        }
-        
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-        
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-        
-        .btn-add {
-            background: ForestGreen;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-        }
-        
-        .btn-add:hover {
-            background: #1d4ed8;
-        }
-        
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-        }
-        
-        .row-card {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 1rem;
-            margin-bottom: 1rem;
-            position: relative;
-        }
-        
-        .row-header {
-            font-size: 1.125rem;
-            font-weight: bold;
-            color: #1f2937;
-            margin-bottom: 1rem;
-        }
-        
-        .row-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 1rem;
-        }
-        
-        .column {
-            border-right: 1px solid #e5e7eb;
-            padding-right: 1rem;
-        }
-        
-        .column:last-child {
-            border-right: none;
-        }
-        
-        .column-title {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-        
-        .input-field {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.25rem;
-            margin-bottom: 0.5rem;
-            font-family: inherit;
-        }
-        
-        .input-field:focus {
-            outline: none;
-            border-color: #2563eb;
-        }
-
-        .input-field[data-prompt="true"] {
-            border: 3px solid lightgrey;
-        }
-        
-        textarea.input-field {
-            resize: vertical;
-            min-height: 150px;
-            font-family: inherit;
-        }
-        
-        .graph-container {
-            background: #f9fafb;
-            border-radius: 0.25rem;
-            padding: 0.5rem;
-        }
-        
-        .graph-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.25rem;
-        }
-        
-        .graph-title {
-            font-size: 0.75rem;
-            color: #6b7280;
-        }
-        
-        .btn-reset {
-            font-size: 0.75rem;
-            padding: 0.125rem 0.5rem;
-        }
-        
-        .graph-svg {
-            border: 1px solid #d1d5db;
-            background: white;
-            display: block;
-        }
-        
-        .delete-btn {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-            background: none;
-            border: none;
-            color: #ef4444;
-            font-size: 1.5rem;
-            cursor: pointer;
-            width: 2rem;
-            height: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.25rem;
-        }
-        
-        .delete-btn:hover {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        
-        .add-update-container {
-            margin-top: 1rem;
-            text-align: center;
-        }
-        
-        .empty-center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9ca3af;
-            text-align: center;
-            min-height: 200px;
-        }
-    </style>
-</head>
-<body>
-    <div class="top-bar">
-        <input type="text" class="project-title" id="projectTitle" value="New Bayesian Analysis">
-        <div class="top-bar-buttons">
-            <button class="btn btn-primary" id="copyBtn">📋 Copy</button>
-            <button class="btn btn-primary" id="pasteBtn">📄 Paste</button>
-            <button class="btn btn-danger" id="resetBtn">🔄 Reset</button>
-        </div>
-    </div>
-
-    <div id="tab-bar"> </div>
-    
-    <div class="main-content" id="mainContent"></div>
-    
-    <script>
-        // Model state
-
-        let initial_model = {
-            projectTitle: 'New Bayesian Analysis',
-            active_paramiter: null,
-            paramiters: new Map([]),
-        };
-       
-        let model = JSON.parse(JSON.stringify(initial_model)); // Deep copy
-        <!-- let model = initial_model; -->
-        model.paramiters = new Map([]);
-
-        let dragState = null;
-        let isShiftPressed = false;
-        
-        // Utility functions
-        function normalize(arr) {
-            const sum = arr.reduce((a, b) => a + b, 0);
-            return sum > 0 ? arr.map(v => v / sum) : arr;
-        }
-        
-        function updatePosterior(prior, likelihood) {
-            const unnormalized = prior.map((p, i) => p * likelihood[i]);
-            return normalize(unnormalized);
-        }
-        
-        function createBezierPath(data, scaleX, scaleY) {
-            if (data.length < 2) return '';
-            
-            let path = `M ${scaleX(0)} ${scaleY(data[0])}`;
-            
-            for (let i = 0; i < data.length - 1; i++) {
-                const x0 = i > 0 ? scaleX(i - 1) : scaleX(i);
-                const y0 = i > 0 ? scaleY(data[i - 1]) : scaleY(data[i]);
-                const x1 = scaleX(i);
-                const y1 = scaleY(data[i]);
-                const x2 = scaleX(i + 1);
-                const y2 = scaleY(data[i + 1]);
-                const x3 = i < data.length - 2 ? scaleX(i + 2) : scaleX(i + 1);
-                const y3 = i < data.length - 2 ? scaleY(data[i + 2]) : scaleY(data[i + 1]);
-                
-                const cp1x = x1 + (x2 - x0) / 6;
-                const cp1y = y1 + (y2 - y0) / 6;
-                const cp2x = x2 - (x3 - x1) / 6;
-                const cp2y = y2 - (y3 - y1) / 6;
-                
-                path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
-            }
-            
-            return path;
-        }
-
-        // Reactive Watchers
-        let watchers = {};
-        
-        // Render functions
-        function renderGraph(container, data, name, title, editable, onChange) {
-            const width = 500;
-            const height = 400;
-            const padding = 40;
-            const maxY = Math.max(...data, 0.1);
-            
-            const scaleX = (i) => padding + (i / (data.length - 1)) * (width - 2 * padding);
-            const scaleY = (v) => height - padding - (v / maxY) * (height - 2 * padding);
-            
-            container.innerHTML = '';
-            
-            const graphDiv = document.createElement('div');
-            graphDiv.className = 'graph-container';
-            
-            const header = document.createElement('div');
-            header.className = 'graph-header';
-            
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'graph-title';
-            titleSpan.textContent = title;
-            header.appendChild(titleSpan);
-            
-            if (editable) {
-                const resetBtn = document.createElement('button');
-                resetBtn.className = 'btn btn-secondary btn-reset';
-                resetBtn.textContent = 'Reset';
-                resetBtn.title = 'Reset to uniform distribution';
-                resetBtn.onclick = () => {
-                    const uniform = new Array(data.length).fill(1 / data.length);
-                    onChange(uniform);
-                };
-                header.appendChild(resetBtn);
-            }
-            
-            graphDiv.appendChild(header);
-            
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', width);
-            svg.setAttribute('height', height);
-            svg.setAttribute('class', 'graph-svg');
-            svg.style.cursor = editable ? 'crosshair' : 'default';
-            
-            // Axes
-            const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            xAxis.setAttribute('x1', padding);
-            xAxis.setAttribute('y1', height - padding);
-            xAxis.setAttribute('x2', width - padding);
-            xAxis.setAttribute('y2', height - padding);
-            xAxis.setAttribute('stroke', 'black');
-            xAxis.setAttribute('stroke-width', '2');
-            svg.appendChild(xAxis);
-            
-            const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            yAxis.setAttribute('x1', padding);
-            yAxis.setAttribute('y1', padding);
-            yAxis.setAttribute('x2', padding);
-            yAxis.setAttribute('y2', height - padding);
-            yAxis.setAttribute('stroke', 'black');
-            yAxis.setAttribute('stroke-width', '2');
-            svg.appendChild(yAxis);
-            
-            // Y-axis label
-            const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            yLabel.setAttribute('x', 10);
-            yLabel.setAttribute('y', 20);
-            yLabel.setAttribute('font-size', '12');
-            yLabel.setAttribute('fill', 'black');
-            yLabel.textContent = 'P';
-            svg.appendChild(yLabel);
-            
-            // X-axis label
-            const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            xLabel.setAttribute('x', width / 2);
-            xLabel.setAttribute('y', height - 5);
-            xLabel.setAttribute('font-size', '12');
-            xLabel.setAttribute('fill', 'black');
-            xLabel.setAttribute('text-anchor', 'middle');
-            xLabel.textContent = name;
-            svg.appendChild(xLabel);
-            
-            // Curve
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', createBezierPath(data, scaleX, scaleY));
-            path.setAttribute('fill', 'none');
-            path.setAttribute('stroke', 'blue');
-            path.setAttribute('stroke-width', '2');
-            svg.appendChild(path);
-            
-            // Points and tooltips
-            const tooltip = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            tooltip.style.display = 'none';
-            
-            const tooltipRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            tooltipRect.setAttribute('width', '60');
-            tooltipRect.setAttribute('height', '20');
-            tooltipRect.setAttribute('fill', 'black');
-            tooltipRect.setAttribute('fill-opacity', '0.8');
-            tooltipRect.setAttribute('rx', '3');
-            tooltip.appendChild(tooltipRect);
-            
-            const tooltipText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            tooltipText.setAttribute('font-size', '12');
-            tooltipText.setAttribute('fill', 'white');
-            tooltipText.setAttribute('text-anchor', 'middle');
-            tooltip.appendChild(tooltipText);
-            
-            svg.appendChild(tooltip);
-            
-            data.forEach((value, i) => {
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', scaleX(i));
-                circle.setAttribute('cy', scaleY(value));
-                circle.setAttribute('r', editable ? 6 : 4);
-                circle.setAttribute('fill', editable ? 'red' : 'blue');
-                circle.setAttribute('stroke', 'white');
-                circle.setAttribute('stroke-width', '2');
-                circle.style.cursor = editable ? 'grab' : 'default';
-                
-                circle.addEventListener('mouseenter', () => {
-                    tooltip.style.display = 'block';
-                    tooltipRect.setAttribute('x', scaleX(i) - 30);
-                    tooltipRect.setAttribute('y', scaleY(value) - 30);
-                    tooltipText.setAttribute('x', scaleX(i));
-                    tooltipText.setAttribute('y', scaleY(value) - 16);
-                    tooltipText.textContent = `${(value * 100).toFixed(1)}%`;
-                });
-                
-                circle.addEventListener('mouseleave', () => {
-                    tooltip.style.display = 'none';
-                });
-                
-                if (editable) {
-                    circle.addEventListener('mousedown', (e) => {
-                        e.preventDefault();
-                        dragState = { 
-                            index: i, 
-                            isShift: e.shiftKey,
-                            onChange,
-                            data,
-                            svg,
-                            scaleX,
-                            scaleY,
-                            x: e.x,
-                            y: e.y,
-                            maxY,
-                            width,
-                            height,
-                            padding
-                        };
-                    });
-                }
-                
-                svg.appendChild(circle);
-                
-                // Value label
-                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                label.setAttribute('x', scaleX(i));
-                label.setAttribute('y', height - padding + 15);
-                label.setAttribute('font-size', '10');
-                label.setAttribute('fill', 'gray');
-                label.setAttribute('text-anchor', 'middle');
-                label.textContent = i;
-                svg.appendChild(label);
-            });
-            
-            graphDiv.appendChild(svg);
-            container.appendChild(graphDiv);
-        }
-        
-        function renderInitialSetup(param) {
-            const container = document.createElement('div');
-            container.className = 'row-card';
-            
-            const header = document.createElement('div');
-            header.className = 'row-header';
-            header.textContent = 'Initial Setup';
-            container.appendChild(header);
-            
-            const grid = document.createElement('div');
-            grid.className = 'row-grid';
-            
-            // Left column: Initial Prior
-            const leftCol = document.createElement('div');
-            leftCol.className = 'column';
-            
-            const priorTitle = document.createElement('div');
-            priorTitle.className = 'column-title';
-            priorTitle.textContent = 'Initial Prior Distribution';
-            leftCol.appendChild(priorTitle);
-            
-            const paramLabel = document.createElement('label');
-            paramLabel.textContent = 'Parameter Name:';
-            paramLabel.style.display = 'block';
-            paramLabel.style.fontSize = '0.875rem';
-            paramLabel.style.marginBottom = '0.25rem';
-            leftCol.appendChild(paramLabel);
-            
-            const paramInput = document.createElement('input');
-            paramInput.type = 'text';
-            paramInput.className = 'input-field';
-            paramInput.value = param.name;
-            paramInput.addEventListener('input', (e) => {
-                param.name = e.target.value;
-                paramInput.setAttribute('data-prompt', 'true');
-            });
-
-            paramInput.addEventListener('keydown', (event) => {
-                if (event.key == 'Enter') {
-                    paramInput.removeAttribute('data-prompt');
-                    render();
-                }
-            });
-            leftCol.appendChild(paramInput);
-            
-            const numLabel = document.createElement('label');
-            numLabel.textContent = 'Number of Values:';
-            numLabel.style.display = 'block';
-            numLabel.style.fontSize = '0.875rem';
-            numLabel.style.marginBottom = '0.25rem';
-            leftCol.appendChild(numLabel);
-            
-            const numInput = document.createElement('input');
-            numInput.type = 'number';
-            numInput.className = 'input-field';
-            numInput.min = '2';
-            numInput.max = '20';
-            numInput.value = param.numValues;
-            numInput.addEventListener('input', (e) => {
-                const n = Math.max(2, Math.min(20, parseInt(e.target.value) || 2));
-                param.numValues = n;
-                param.initialPrior = new Array(n).fill(1 / n);
-                param.updates = [];
-                recalculatePosteriors(param);
-                render();
-            });
-            leftCol.appendChild(numInput);
-            
-            const graphContainer = document.createElement('div');
-            renderGraph(graphContainer, param.initialPrior, param.name, 'Prior', true, (newPrior) => {
-                param.initialPrior = normalize(newPrior);
-                recalculatePosteriors(param);
-                render();
-            });
-            leftCol.appendChild(graphContainer);
-            
-            grid.appendChild(leftCol);
-            
-            // Middle column: Empty
-            const midCol = document.createElement('div');
-            midCol.className = 'column';
-            const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'empty-center';
-            emptyDiv.textContent = 'No likelihood for initial prior';
-            midCol.appendChild(emptyDiv);
-            grid.appendChild(midCol);
-            
-            // Right column: Description
-            const rightCol = document.createElement('div');
-            rightCol.className = 'column';
-            
-            const descTitle = document.createElement('div');
-            descTitle.className = 'column-title';
-            descTitle.textContent = 'Description';
-            rightCol.appendChild(descTitle);
-            
-            const descTextarea = document.createElement('textarea');
-            descTextarea.className = 'input-field';
-            descTextarea.placeholder = 'Describe your analysis...';
-            descTextarea.value = param.description;
-            descTextarea.style.minHeight = '250px';
-            descTextarea.addEventListener('input', (e) => {
-                param.description = e.target.value;
-            });
-            rightCol.appendChild(descTextarea);
-            
-            grid.appendChild(rightCol);
-            container.appendChild(grid);
-            
-            return container;
-        }
-        
-        function renderDependencyRow(param, update, index){
-            
-            const container = document.createElement('div');
-            const headercard = document.createElement('div');
-            headercard.className = 'row-card';
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '✕';
-            deleteBtn.onclick = () => {
-                param.updates.splice(index, 1);
-                render();
-            };
-            headercard.appendChild(deleteBtn);
-
-            const header = document.createElement('div');
-            header.className = 'row-header';
-
-            set_dependency_target = (new_param) => {
-                if (new_param.updates[index].target) {
-                    let target_uuid = new_param.updates[index].target;
-                    let target = model.paramiters.get(target_uuid);
-                    header.innerHTML= `<strong>Dependence on </strong> <i>${target.name}</i>`;
-                } else {
-                    header.textContent = "";
-                    const selector = document.createElement('ul');
-                    for (const [uuid, param] of model.paramiters) {
-                        if (uuid == new_param.uuid) { continue; }
-                        const item = document.createElement('button');
-                        item.textContent = param.name;
-                        item.value = uuid;
-                        item.onclick = () => {
-                            new_param.updates[index].target = uuid;
-                            new_param.updates[index].implication_matrix = Array.from(Array(new_param.numValues), () => new Array(model.paramiters.get(uuid).numValues).fill(1.0));
-                            recalculatePosteriors(new_param);
-                            render();
-                        }
-                        selector.appendChild(item);
-                    };
-                    header.replaceChildren(selector); 
-            };};
-            watchers[param.updates[index].uuid].push(set_dependency_target);
-            set_dependency_target(param);
-
-            headercard.appendChild(header);
-
-            if (update.target == null) {return headercard;}
-
-            const target_uuid = update.target;
-            const target = model.paramiters.get(target_uuid);
-
-            const grid = document.createElement('div');
-            grid.className = 'row-grid';
-
-            const leftCol = document.createElement('div');
-
-                const posteriorTitle = document.createElement('div');
-                posteriorTitle.className = 'column-title';
-                posteriorTitle.textContent = 'Prior → Posterior';
-                leftCol.appendChild(posteriorTitle);
-            
-                const posteriorheadercard = document.createElement('div');
-                renderGraph(posteriorheadercard, update.posterior, param.name, 'Posterior', false, null);
-                leftCol.appendChild(posteriorheadercard);
-
-            grid.appendChild(leftCol);
-
-            const middleCol = document.createElement('div');
-
-                const posteriorDependencieTitle = document.createElement('div');
-                posteriorDependencieTitle.className = 'column-title';
-                posteriorDependencieTitle.textContent = 'Posterior Dependencie';
-                middleCol.appendChild(posteriorDependencieTitle);
-            
-                const posteriorDependencieheadercard = document.createElement('div');
-                renderGraph(posteriorDependencieheadercard, target.finalPosterior, target.name, `${target.name} Posterior`, false, null);
-                middleCol.appendChild(posteriorDependencieheadercard);
-
-
-            grid.appendChild(middleCol);
-
-            const rightCol = document.createElement('div');
-            grid.appendChild(rightCol);
-
-            headercard.appendChild(grid);
-            container.appendChild(headercard);
-
-            for (let n=0; n < target.numValues; n++ ){
-                const implication_card = document.createElement('div');
-                container.appendChild(implication_card);
-                implication_card.className = 'row-card';
-
-                const header = document.createElement('div');
-                implication_card.appendChild(header);
-                header.className = 'row-header';
-                header.textContent = `Implication of ${target.name} = ${n}`
-
-                const grid = document.createElement('grid');
-                implication_card.appendChild(grid);
-
-                const column_1 = document.createElement('div');
-                grid.appendChild(column_1);
-                column_1.className = 'column'
-
-                const column_2 = document.createElement('div');
-                grid.appendChild(column_2);
-                column_2.className = 'column'
-
-                const implication_data = Array(param.numValues);
-                for (let j=0; j<param.numValues; j++) {
-                    implication_data[j] = param.updates[index].implication_matrix[j][n];
-                }
-                renderGraph(column_1, implication_data, param.name, 'Given the value what is the effect', true, (new_implication) => {
-                    for (let j=0; j<param.numValues; j++) {
-                        param.updates[index].implication_matrix[j][n] = new_implication[j];
-                    }
-                    recalculatePosteriors(param);
-                    render();
-                });
-
-            }
-
-            return container;
-        }
-
-        function renderEvidenceRow(param, update, index) {
-            const container = document.createElement('div');
-            container.className = 'row-card';
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '✕';
-            deleteBtn.onclick = () => {
-                param.updates.splice(index, 1);
-                recalculatePosteriors(param);
-                render();
-            };
-            container.appendChild(deleteBtn);
-            
-            const header = document.createElement('div');
-            header.className = 'row-header';
-            <!-- header.textContent = `Evidence ${index + 1}`; -->
-            update_title = (new_param) => {header.textContent = `${new_param.updates[index].title}`};
-            watchers[param.updates[index].uuid].push(update_title);
-            update_title(param);
-            container.appendChild(header);
-            
-            const grid = document.createElement('div');
-            grid.className = 'row-grid';
-            
-            // Left column: Posterior
-            const leftCol = document.createElement('div');
-            leftCol.className = 'column';
-            
-            const posteriorTitle = document.createElement('div');
-            posteriorTitle.className = 'column-title';
-            posteriorTitle.textContent = 'Prior → Posterior';
-            leftCol.appendChild(posteriorTitle);
-            
-            const posteriorContainer = document.createElement('div');
-            renderGraph(posteriorContainer, update.posterior, param.name, 'Posterior', false, null);
-            leftCol.appendChild(posteriorContainer);
-            
-            grid.appendChild(leftCol);
-            
-            // Middle column: Likelihood
-            const midCol = document.createElement('div');
-            midCol.className = 'column';
-            
-            const likelihoodTitle = document.createElement('div');
-            likelihoodTitle.className = 'column-title';
-            likelihoodTitle.textContent = 'Likelihood (The Probability of the evidence given each paremiter vlaue)';
-            midCol.appendChild(likelihoodTitle);
-            
-            const likelihoodContainer = document.createElement('div');
-            renderGraph(likelihoodContainer, update.likelihood, param.name, 'Likelihood', true, (newLikelihood) => {
-                param.updates[index].likelihood = newLikelihood;
-                recalculatePosteriors(param);
-                render();
-            });
-            midCol.appendChild(likelihoodContainer);
-            
-            grid.appendChild(midCol);
-            
-            // Right column: Notes
-            const rightCol = document.createElement('div');
-            rightCol.className = 'column';
-            
-            const notesTitle = document.createElement('div');
-            notesTitle.className = 'column-title';
-            notesTitle.textContent = 'Evidence Information';
-            rightCol.appendChild(notesTitle);
-            
-            const titleInput = document.createElement('input');
-            titleInput.type = 'text';
-            titleInput.className = 'input-field';
-            titleInput.placeholder = 'Evidence title...';
-            titleInput.value = update.title;
-            titleInput.style.fontWeight = '600';
-            titleInput.addEventListener('input', (e) => {
-                param.updates[index].title = e.target.value;
-                watchers[param.updates[index].uuid].map((updater) => updater(param));
-            });
-            rightCol.appendChild(titleInput);
-            
-            const descTextarea = document.createElement('textarea');
-            descTextarea.className = 'input-field';
-            descTextarea.placeholder = 'Reasoning for this update...';
-            descTextarea.value = update.description;
-            descTextarea.style.minHeight = '180px';
-            descTextarea.addEventListener('input', (e) => {
-                param.updates[index].description = e.target.value;
-            });
-            rightCol.appendChild(descTextarea);
-            
-            grid.appendChild(rightCol);
-            container.appendChild(grid);
-            
-            return container;
-        }
-        
-        function recalculatePosteriors(param) {
-        
-            for (let i = 0; i < param.updates.length; i++) {
-                const prior = i === 0 ? param.initialPrior : param.updates[i - 1].posterior;
-                let likelihood = null;
-
-                if (param.updates[i].type == 'evidence') {
-                    likelihood = param.updates[i].likelihood;
-
-                } else if (param.updates[i].type == 'dependency') {
-                    const target_uuid = param.updates[i].target;
-                    const target = model.paramiters.get(target_uuid);
-                    const I = param.updates[i].implication_matrix;
-                    const M = target.numValues;
-                    const N = param.numValues;
-                    likelihood = new Array(N).fill(0);
-                    for (let m=0; m<M; m++) {
-                        for (let n=0; n<N; n++) {
-                            likelihood[n] += target.finalPosterior[m] * I[n][m];
-                        }
-                    }
-
-                } else {
-                    console.log(`Error: Unrecognised update type ${param.updates[i].type}`);
-                    return;
-                }
-
-                param.updates[i].posterior = updatePosterior(prior, likelihood);
-            }
-
-            if (param.updates.length != 0) {
-                param.finalPosterior = param.updates[param.updates.length-1].posterior;
-            } else {
-                param.finalPosterior = param.initialPrior;
-            }
-        }
-        
-        function render() {
-            const mainContent = document.getElementById('mainContent');
-            mainContent.innerHTML = '';
-            
-            // Project title sync
-            let active_paramiter = null;
-
-            document.getElementById('projectTitle').value = model.projectTitle;
-            tab_bar = document.getElementById('tab-bar');
-            tab_bar.innerHTML = '';
-            for (const [uuid, param] of model.paramiters) {
-                param.updates.forEach((update) => watchers[update.uuid] = []);
-                button = document.createElement('button');
-                button.id = uuid;
-                button.textContent = param.name;
-                button.addEventListener('click', () => {model.active_paramiter = uuid; render();});
-                if (model.active_paramiter == uuid){
-                    button.classList.add('active');
-                    active_paramiter = param;
-                }
-                tab_bar.appendChild(button);
-            }
-
-            button = document.createElement('button');
-            button.id = 'addParam';
-            button.classList.add('tool');
-            button.addEventListener('click',addParamiter);
-            button.textContent = '+ Add Paramiter'
-            tab_bar.appendChild(button);
-            // clear watchers
-           
-            if (active_paramiter) {
-                // Render initial setup
-                mainContent.appendChild(renderInitialSetup(active_paramiter));
-            
-                // Render updates
-                active_paramiter.updates.forEach((update, index) => {
-                    if (update.type == 'evidence') {mainContent.appendChild(renderEvidenceRow(active_paramiter, update, index));}
-                    if (update.type == 'dependency') {mainContent.appendChild(renderDependencyRow(active_paramiter, update, index));}
-                });
-            
-                // Add evidence button
-                const addContainer = document.createElement('div');
-                addContainer.className = 'add-update-container';
-                const addBtnE = document.createElement('button');
-                addBtnE.className = 'btn btn-add';
-                addBtnE.textContent = '+ Add Evidence';
-                addBtnE.style.margin = '5px';
-                addBtnE.onclick = () => addEvidence(active_paramiter);
-                addContainer.appendChild(addBtnE);
-
-                // Add Dependency button
-                addContainer.className = 'add-update-container';
-                const addBtnC = document.createElement('button');
-                addBtnC.className = 'btn btn-add';
-                addBtnC.textContent = '+ Add Dependence';
-                addBtnC.style.margin = '5px';
-                addBtnC.onclick = () => addDependency(active_paramiter);
-                addContainer.appendChild(addBtnC);
-
-                mainContent.appendChild(addContainer);
-
-            } else {
-                addParamiter();
-                render();
-            }
-        }
-        
-        function addEvidence(param) {
-            const prevPosterior = param.updates.length > 0 
-                ? param.updates[param.updates.length - 1].posterior
-                : param.initialPrior;
-            
-            const newEvidence = {
-                type: 'evidence',
-                title: `Evidence ${param.updates.length + 1}`,
-                description: '',
-                likelihood: new Array(param.numValues).fill(1),
-                posterior: prevPosterior,
-                uuid: crypto.randomUUID(),
-            };
-
-            watchers[newEvidence.uuid] = [];
-            
-            param.updates.push(newEvidence);
-            render();
-        }
-
-        function addDependency(param){
-            const prevPosterior = param.updates.length > 0 
-                ? param.updates[param.updates.length - 1].posterior
-                : param.initialPrior;
-
-            const Dependency = {
-                type: 'dependency',
-                target: null, // uuid of the target paramiter
-                implication_matrix: undefined, // NxM matrix where N is the number of values of the paramiter in the current paramiter, and M are thoes in the target paramiter
-                description: '',
-                posterior: prevPosterior,
-                uuid: crypto.randomUUID(),
-            };
-            watchers[Dependency.uuid] = [];
-            param.updates.push(Dependency);
-            render();
-        }
-
-        let paramiter_count = 0;
-        function addParamiter() {
-            paramiter_count += 1;
-            const uuid = crypto.randomUUID();
-            const newParamiter = {
-                uuid: uuid,
-                name: `P-${paramiter_count}`,
-                numValues: 5,
-                initialPrior: [0.2, 0.2, 0.2, 0.2, 0.2],
-                finalPosterior: [0.2, 0.2, 0.2, 0.2, 0.2],
-                description: '',
-                updates: []
-            }
-            model.paramiters.set(uuid, newParamiter);
-            model.active_paramiter = uuid;
-            render();
-        }
-
-       
-        
-        // Event listeners
-        document.getElementById('projectTitle').addEventListener('input', (e) => {
-            model.projectTitle = e.target.value;
-        });
-        
-        document.getElementById('copyBtn').addEventListener('click', () => {
-            navigator.clipboard.writeText(JSON.stringify(model, (key, value) => {
-               return (value instanceof Map) ? Array.from(value.entries()) : value;
-            }, 2));
-        });
-
-        
-        document.getElementById('pasteBtn').addEventListener('click', async () => {
-            try {
-                const text = await navigator.clipboard.readText();
-                model = JSON.parse(text);
-                model.paramiters = new Map(model.paramiters);
-                model.paramiters.get(model.active_paramiter).updates.forEach((update) => watchers[update.uuid] = []);
-                render();
-            } catch (e) {
-                alert('Error loading from clipboard. Make sure you copied valid data.');
-                console.log(e)
-            }
-        });
-        
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            if (confirm('Reset to a new project? This will clear all data.')) {
-                model = initial_model;
-                render();
-            } else {
-                console.log('Reset declined by user');
-            }
-        });
-
-        
-        // Global mouse handling for dragging
-        document.addEventListener('mousemove', (e) => {
-            if (!dragState) return;
-            
-            const rect = dragState.svg.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const value = Math.min(1, Math.max(0, dragState.data[dragState.index] + (dragState.y - y) / 200));
-            
-            if (dragState.isShift) {
-                const newData = [...dragState.data];
-                for (let i = 0; i < dragState.data.length; i++) {
-                    const pointX = dragState.scaleX(i);
-                    const prevPointX = i > 0 ? dragState.scaleX(i - 1) : 
-                        dragState.scaleX(0) - (dragState.scaleX(1) - dragState.scaleX(0));
-                    const nextPointX = i < dragState.data.length - 1 ? dragState.scaleX(i + 1) : 
-                        dragState.scaleX(dragState.data.length - 1) + 
-                        (dragState.scaleX(dragState.data.length - 1) - dragState.scaleX(dragState.data.length - 2));
-                    
-                    if (x >= (prevPointX + pointX) / 2 && x < (pointX + nextPointX) / 2) {
-                        newData[i] = value;
-                    }
-                }
-                dragState.onChange(newData);
-            } else {
-                const newData = [...dragState.data];
-                newData[dragState.index] = value;
-                dragState.onChange(newData);
-            }
-        });
-        
-        document.addEventListener('mouseup', () => {
-            dragState = null;
-        });
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Shift') isShiftPressed = true;
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'Shift') isShiftPressed = false;
-        });
-        
-        // Initial render
-        render();
-    </script>
-</body>
+		<script>
+			// Model state
+			
+			let initial_model = {
+				projectTitle: 'New Bayesian Analysis',
+				display_mode: 'graph',
+				active_paramiter: null,
+				paramiters: new Map([]),
+				};
+				
+				let model = JSON.parse(JSON.stringify(initial_model)); // Deep copy
+				<!-- let model = initial_model; -->
+				model.paramiters = new Map([]);
+				
+				let dragState = null;
+				let isShiftPressed = false;
+				
+				// Utility functions
+				function normalizer(arr) {
+					const sum = arr.reduce((a, b) => a + b, 0);
+					return arr.map(v => v/sum);
+					<!-- return sum > 0 ? arr.map(v => v / sum) : arr; -->
+				}
+				
+				function updatePosterior(prior, likelihood) {
+					const unnormalized = prior.map((p, i) => p * likelihood[i]);
+					return normalizer(unnormalized, 1);
+				}
+				
+				function createBezierPath(data, scaleX, scaleY) {
+					if (data.length < 2) return '';
+					
+					let path = `M ${scaleX(0)} ${scaleY(data[0])}`;
+					
+					for (let i = 0; i < data.length - 1; i++) {
+						const x0 = i > 0 ? scaleX(i - 1) : scaleX(i);
+						const y0 = i > 0 ? scaleY(data[i - 1]) : scaleY(data[i]);
+						const x1 = scaleX(i);
+						const y1 = scaleY(data[i]);
+						const x2 = scaleX(i + 1);
+						const y2 = scaleY(data[i + 1]);
+						const x3 = i < data.length - 2 ? scaleX(i + 2) : scaleX(i + 1);
+						const y3 = i < data.length - 2 ? scaleY(data[i + 2]) : scaleY(data[i + 1]);
+						
+						const cp1x = x1 + (x2 - x0) / 6;
+						const cp1y = y1 + (y2 - y0) / 6;
+						const cp2x = x2 - (x3 - x1) / 6;
+						const cp2y = y2 - (y3 - y1) / 6;
+						
+						path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+					}
+					
+					return path;
+				}
+				
+				// Reactive Watchers
+				let watchers = {};
+				
+				function renderData(container, data, name, title, editable, normalize, onChange) {
+					if (model.display_mode == 'graph'){
+						renderGraph(container, data, name, title, editable, normalize, onChange);
+						} else if (model.display_mode == 'table') {
+							renderTable(container, data, name, title, editable, normalize, onChange);
+							} else {
+								console.log('Error: Unknown renderData mode', normalize, model.display_mode);
+							}
+						}
+						
+						function renderTable(container, data, name, title, editable, normalize, onChange){
+							const table = container.appendChild(document.createElement('table'));
+							const header = table.appendChild(document.createElement('tr'));
+							header.innerHTML = `<th>${name}</th><th>${title}</th>`;
+							for (let n=0; n<data.length; n++){
+								let row = table.appendChild(document.createElement('tr'));
+								if (!editable) {
+									console.log('normal table row');
+									row.innerHTML = `<td>${n}</td> <td>${data[n]}</td>`;
+									} else {
+										console.log('editable table row');
+										const value = row.appendChild(document.createElement('td'));
+										value.textContent = `${n}`;
+										const prob = row.appendChild(document.createElement('input'));
+										prob.setAttribute('type', 'number');
+										prob.setAttribute('min', '0');
+										prob.setAttribute('max', '1');
+										prob.setAttribute('step', '0.01');
+										prob.value = data[n];
+										prob.addEventListener('change',(change) => {
+											let newval = Number(change.target.value);
+											if (!normalize) {
+												const new_data = [...data];
+												new_data[n] = newval;
+												return onChange(new_data);
+											}
+											console.log('normalizeing');
+											new_data = data.map((v) => v * (1-newval)/(1-data[n]));
+											new_data[n] = newval;
+											onChange(new_data);
+											});
+										}
+									}
+								}
+								
+								// Render functions
+								function renderGraph(container, data, name, title, editable, normalize, _onChange) {
+									onChange = normalize ? (change) => _onChange(normalizer(change)) : _onChange;
+									const width = 500;
+									const height = 400;
+									const padding = 40;
+									const maxY = Math.max(...data, 0.1);
+									
+									const scaleX = (i) => padding + (i / (data.length - 1)) * (width - 2 * padding);
+									const scaleY = (v) => height - padding - (v / maxY) * (height - 2 * padding);
+									
+									container.innerHTML = '';
+									
+									const graphDiv = container.appendChild(document.createElement('div'));
+									graphDiv.className = 'graph-container';
+									
+									const header = graphDiv.appendChild(document.createElement('div'));
+									header.className = 'graph-header';
+									
+									const titleSpan = header.appendChild(document.createElement('span'));
+									titleSpan.className = 'graph-title';
+									titleSpan.textContent = title;
+									
+									if (editable) {
+										const resetBtn = header.appendChild(document.createElement('button'));
+										resetBtn.className = 'btn btn-secondary btn-reset';
+										resetBtn.textContent = 'Reset';
+										resetBtn.title = 'Reset to uniform distribution';
+										resetBtn.onclick = () => {
+											const uniform = new Array(data.length).fill(1 / data.length);
+											onChange(uniform);
+											};
+										}
+										
+										const svg = graphDiv.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+										svg.setAttribute('width', width);
+										svg.setAttribute('height', height);
+										svg.setAttribute('class', 'graph-svg');
+										svg.style.cursor = editable ? 'crosshair' : 'default';
+										
+										// Axes
+										const xAxis = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'line'));
+										xAxis.setAttribute('x1', padding);
+										xAxis.setAttribute('y1', height - padding);
+										xAxis.setAttribute('x2', width - padding);
+										xAxis.setAttribute('y2', height - padding);
+										xAxis.setAttribute('stroke', 'black');
+										xAxis.setAttribute('stroke-width', '2');
+										
+										const yAxis = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'line'));
+										yAxis.setAttribute('x1', padding);
+										yAxis.setAttribute('y1', padding);
+										yAxis.setAttribute('x2', padding);
+										yAxis.setAttribute('y2', height - padding);
+										yAxis.setAttribute('stroke', 'black');
+										yAxis.setAttribute('stroke-width', '2');
+										
+										// Y-axis label
+										const yLabel = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'text'));
+										yLabel.setAttribute('x', 10);
+										yLabel.setAttribute('y', 20);
+										yLabel.setAttribute('font-size', '12');
+										yLabel.setAttribute('fill', 'black');
+										yLabel.textContent = 'P';
+										
+										// X-axis label
+										const xLabel = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'text'));
+										xLabel.setAttribute('x', width / 2);
+										xLabel.setAttribute('y', height - 5);
+										xLabel.setAttribute('font-size', '12');
+										xLabel.setAttribute('fill', 'black');
+										xLabel.setAttribute('text-anchor', 'middle');
+										xLabel.textContent = name;
+										
+										// Curve
+										const path = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'path'));
+										path.setAttribute('d', createBezierPath(data, scaleX, scaleY));
+										path.setAttribute('fill', 'none');
+										path.setAttribute('stroke', 'blue');
+										path.setAttribute('stroke-width', '2');
+										
+										// Points and tooltips
+										const tooltip = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'g'));
+										tooltip.style.display = 'none';
+										
+										const tooltipRect = tooltip.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'rect'));
+										tooltipRect.setAttribute('width', '60');
+										tooltipRect.setAttribute('height', '20');
+										tooltipRect.setAttribute('fill', 'black');
+										tooltipRect.setAttribute('fill-opacity', '0.8');
+										tooltipRect.setAttribute('rx', '3');
+										
+										const tooltipText = tooltip.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'text'));
+										tooltipText.setAttribute('font-size', '12');
+										tooltipText.setAttribute('fill', 'white');
+										tooltipText.setAttribute('text-anchor', 'middle');
+										
+										data.forEach((value, i) => {
+											const circle = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'circle'));
+											circle.setAttribute('cx', scaleX(i));
+											circle.setAttribute('cy', scaleY(value));
+											circle.setAttribute('r', editable ? 6 : 4);
+											circle.setAttribute('fill', editable ? 'red' : 'blue');
+											circle.setAttribute('stroke', 'white');
+											circle.setAttribute('stroke-width', '2');
+											circle.style.cursor = editable ? 'grab' : 'default';
+											
+											circle.addEventListener('mouseenter', () => {
+												tooltip.style.display = 'block';
+												tooltipRect.setAttribute('x', scaleX(i) - 30);
+												tooltipRect.setAttribute('y', scaleY(value) - 30);
+												tooltipText.setAttribute('x', scaleX(i));
+												tooltipText.setAttribute('y', scaleY(value) - 16);
+												tooltipText.textContent = `${(value * 100).toFixed(1)}%`;
+												});
+												
+												circle.addEventListener('mouseleave', () => {
+													tooltip.style.display = 'none';
+													});
+													
+													if (editable) {
+														circle.addEventListener('mousedown', (e) => {
+															e.preventDefault();
+															dragState = {
+																index: i,
+																isShift: e.shiftKey,
+																onChange,
+																data,
+																svg,
+																scaleX,
+																scaleY,
+																x: e.x,
+																y: e.y,
+																maxY,
+																width,
+																height,
+																padding
+																};
+																});
+															}
+															
+															// Value label
+															const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+															label.setAttribute('x', scaleX(i));
+															label.setAttribute('y', height - padding + 15);
+															label.setAttribute('font-size', '10');
+															label.setAttribute('fill', 'gray');
+															label.setAttribute('text-anchor', 'middle');
+															label.textContent = i;
+															svg.appendChild(label);
+															});
+															
+														}
+														
+														function renderInitialSetup(param) {
+															const container = document.createElement('div');
+															container.className = 'row-card';
+															
+															const header = document.createElement('div');
+															header.className = 'row-header';
+															header.textContent = 'Initial Setup';
+															container.appendChild(header);
+															
+															const grid = document.createElement('div');
+															grid.className = 'row-grid';
+															
+															// Left column: Initial Prior
+															const leftCol = document.createElement('div');
+															leftCol.className = 'column';
+															
+															const priorTitle = document.createElement('div');
+															priorTitle.className = 'column-title';
+															priorTitle.textContent = 'Initial Prior Distribution';
+															leftCol.appendChild(priorTitle);
+															
+															const paramLabel = document.createElement('label');
+															paramLabel.textContent = 'Parameter Name:';
+															paramLabel.style.display = 'block';
+															paramLabel.style.fontSize = '0.875rem';
+															paramLabel.style.marginBottom = '0.25rem';
+															leftCol.appendChild(paramLabel);
+															
+															const paramInput = document.createElement('input');
+															paramInput.type = 'text';
+															paramInput.className = 'input-field';
+															paramInput.value = param.name;
+															paramInput.addEventListener('input', (e) => {
+																param.name = e.target.value;
+																paramInput.setAttribute('data-prompt', 'true');
+																});
+																
+																paramInput.addEventListener('keydown', (event) => {
+																	if (event.key == 'Enter') {
+																		paramInput.removeAttribute('data-prompt');
+																		render();
+																	}
+																	});
+																	leftCol.appendChild(paramInput);
+																	
+																	const numLabel = document.createElement('label');
+																	numLabel.textContent = 'Number of Values:';
+																	numLabel.style.display = 'block';
+																	numLabel.style.fontSize = '0.875rem';
+																	numLabel.style.marginBottom = '0.25rem';
+																	leftCol.appendChild(numLabel);
+																	
+																	const numInput = document.createElement('input');
+																	numInput.type = 'number';
+																	numInput.className = 'input-field';
+																	numInput.min = '2';
+																	numInput.max = '20';
+																	numInput.value = param.numValues;
+																	numInput.addEventListener('input', (e) => {
+																		const n = Math.max(2, Math.min(20, parseInt(e.target.value) || 2));
+																		param.numValues = n;
+																		param.initialPrior = new Array(n).fill(1 / n);
+																		param.updates = [];
+																		recalculatePosteriors(param);
+																		render();
+																		});
+																		leftCol.appendChild(numInput);
+																		
+																		const graphContainer = document.createElement('div');
+																		renderData(graphContainer, param.initialPrior, param.name, 'Prior', true, true, (newPrior) => {
+																			param.initialPrior = newPrior;
+																			recalculatePosteriors(param);
+																			render();
+																			});
+																			leftCol.appendChild(graphContainer);
+																			
+																			grid.appendChild(leftCol);
+																			
+																			// Middle column: Empty
+																			const midCol = document.createElement('div');
+																			midCol.className = 'column';
+																			const emptyDiv = document.createElement('div');
+																			emptyDiv.className = 'empty-center';
+																			emptyDiv.textContent = 'No likelihood for initial prior';
+																			midCol.appendChild(emptyDiv);
+																			grid.appendChild(midCol);
+																			
+																			// Right column: Description
+																			const rightCol = document.createElement('div');
+																			rightCol.className = 'column';
+																			
+																			const descTitle = document.createElement('div');
+																			descTitle.className = 'column-title';
+																			descTitle.textContent = 'Description';
+																			rightCol.appendChild(descTitle);
+																			
+																			const descTextarea = document.createElement('textarea');
+																			descTextarea.className = 'input-field';
+																			descTextarea.placeholder = 'Describe your analysis...';
+																			descTextarea.value = param.description;
+																			descTextarea.style.minHeight = '250px';
+																			descTextarea.addEventListener('input', (e) => {
+																				param.description = e.target.value;
+																				});
+																				rightCol.appendChild(descTextarea);
+																				
+																				grid.appendChild(rightCol);
+																				container.appendChild(grid);
+																				
+																				return container;
+																			}
+																			
+																			function renderDependencyRow(param, update, index){
+																				
+																				const container = document.createElement('div');
+																				const headercard = document.createElement('div');
+																				headercard.className = 'row-card';
+																				
+																				const deleteBtn = document.createElement('button');
+																				deleteBtn.className = 'delete-btn';
+																				deleteBtn.textContent = '✕';
+																				deleteBtn.onclick = () => {
+																					param.updates.splice(index, 1);
+																					render();
+																					};
+																					headercard.appendChild(deleteBtn);
+																					
+																					const header = document.createElement('div');
+																					header.className = 'row-header';
+																					
+																					set_dependency_target = (new_param) => {
+																						if (new_param.updates[index].target) {
+																							let target_uuid = new_param.updates[index].target;
+																							let target = model.paramiters.get(target_uuid);
+																							header.innerHTML= `<strong>Dependence on </strong> <i>${target.name}</i>`;
+																							} else {
+																								header.textContent = "";
+																								const selector = document.createElement('ul');
+																								for (const [uuid, param] of model.paramiters) {
+																									if (uuid == new_param.uuid) { continue; }
+																									const item = document.createElement('button');
+																									item.textContent = param.name;
+																									item.value = uuid;
+																									item.onclick = () => {
+																										new_param.updates[index].target = uuid;
+																										new_param.updates[index].implication_matrix = Array.from(Array(new_param.numValues), () => new Array(model.paramiters.get(uuid).numValues).fill(1.0));
+																										recalculatePosteriors(new_param);
+																										render();
+																									}
+																									selector.appendChild(item);
+																									};
+																									header.replaceChildren(selector);
+																									};};
+																									watchers[param.updates[index].uuid].push(set_dependency_target);
+																									set_dependency_target(param);
+																									
+																									headercard.appendChild(header);
+																									
+																									if (update.target == null) {return headercard;}
+																									
+																									const target_uuid = update.target;
+																									const target = model.paramiters.get(target_uuid);
+																									
+																									const grid = document.createElement('div');
+																									grid.className = 'row-grid';
+																									
+																									const leftCol = document.createElement('div');
+																									
+																									const posteriorTitle = document.createElement('div');
+																									posteriorTitle.className = 'column-title';
+																									posteriorTitle.textContent = 'Prior → Posterior';
+																									leftCol.appendChild(posteriorTitle);
+																									
+																									const posteriorheadercard = document.createElement('div');
+																									renderData(posteriorheadercard, update.posterior, param.name, 'Posterior', false, false, null);
+																									leftCol.appendChild(posteriorheadercard);
+																									
+																									grid.appendChild(leftCol);
+																									
+																									const middleCol = document.createElement('div');
+																									
+																									const posteriorDependencieTitle = document.createElement('div');
+																									posteriorDependencieTitle.className = 'column-title';
+																									posteriorDependencieTitle.textContent = 'Posterior Dependencie';
+																									middleCol.appendChild(posteriorDependencieTitle);
+																									
+																									const posteriorDependencieheadercard = document.createElement('div');
+																									renderData(posteriorDependencieheadercard, target.finalPosterior, target.name, `${target.name} Posterior`, false, false, null);
+																									middleCol.appendChild(posteriorDependencieheadercard);
+																									
+																									grid.appendChild(middleCol);
+																									
+																									const rightCol = document.createElement('div');
+																									grid.appendChild(rightCol);
+																									
+																									headercard.appendChild(grid);
+																									container.appendChild(headercard);
+																									
+																									for (let n=0; n < target.numValues; n++ ){
+																										const implication_card = document.createElement('div');
+																										container.appendChild(implication_card);
+																										implication_card.className = 'row-card';
+																										
+																										const header = document.createElement('div');
+																										implication_card.appendChild(header);
+																										header.className = 'row-header';
+																										header.textContent = `Implication of ${target.name} = ${n}`
+																										
+																										const grid = document.createElement('grid');
+																										implication_card.appendChild(grid);
+																										
+																										const column_1 = document.createElement('div');
+																										grid.appendChild(column_1);
+																										column_1.className = 'column'
+																										
+																										const column_2 = document.createElement('div');
+																										grid.appendChild(column_2);
+																										column_2.className = 'column'
+																										
+																										const implication_data = Array(param.numValues);
+																										for (let j=0; j<param.numValues; j++) {
+																											implication_data[j] = param.updates[index].implication_matrix[j][n];
+																										}
+																										renderData(column_1, implication_data, param.name, 'Given the value what is the effect', true, false, (new_implication) => {
+																											for (let j=0; j<param.numValues; j++) {
+																												param.updates[index].implication_matrix[j][n] = new_implication[j];
+																											}
+																											recalculatePosteriors(param);
+																											render();
+																											});
+																											
+																										}
+																										
+																										return container;
+																									}
+																									
+																									function renderEvidenceRow(param, update, index) {
+																										const container = document.createElement('div');
+																										container.className = 'row-card';
+																										
+																										const deleteBtn = document.createElement('button');
+																										deleteBtn.className = 'delete-btn';
+																										deleteBtn.textContent = '✕';
+																										deleteBtn.onclick = () => {
+																											param.updates.splice(index, 1);
+																											recalculatePosteriors(param);
+																											render();
+																											};
+																											container.appendChild(deleteBtn);
+																											
+																											const header = document.createElement('div');
+																											header.className = 'row-header';
+																											<!-- header.textContent = `Evidence ${index + 1}`; -->
+																											update_title = (new_param) => {header.textContent = `${new_param.updates[index].title}`};
+																											watchers[param.updates[index].uuid].push(update_title);
+																											update_title(param);
+																											container.appendChild(header);
+																											
+																											const grid = document.createElement('div');
+																											grid.className = 'row-grid';
+																											
+																											// Left column: Posterior
+																											const leftCol = document.createElement('div');
+																											leftCol.className = 'column';
+																											
+																											const posteriorTitle = document.createElement('div');
+																											posteriorTitle.className = 'column-title';
+																											posteriorTitle.textContent = 'Prior → Posterior';
+																											leftCol.appendChild(posteriorTitle);
+																											
+																											const posteriorContainer = document.createElement('div');
+																											renderData(posteriorContainer, update.posterior, param.name, 'Posterior', false, false, null);
+																											leftCol.appendChild(posteriorContainer);
+																											
+																											grid.appendChild(leftCol);
+																											
+																											// Middle column: Likelihood
+																											const midCol = document.createElement('div');
+																											midCol.className = 'column';
+																											
+																											const likelihoodTitle = document.createElement('div');
+																											likelihoodTitle.className = 'column-title';
+																											likelihoodTitle.textContent = 'Likelihood (The Probability of the evidence given each paremiter vlaue)';
+																											midCol.appendChild(likelihoodTitle);
+																											
+																											const likelihoodContainer = document.createElement('div');
+																											renderData(likelihoodContainer, update.likelihood, param.name, 'Likelihood', true, false,(newLikelihood) => {
+																												param.updates[index].likelihood = newLikelihood;
+																												recalculatePosteriors(param);
+																												render();
+																												});
+																												midCol.appendChild(likelihoodContainer);
+																												
+																												grid.appendChild(midCol);
+																												
+																												// Right column: Notes
+																												const rightCol = document.createElement('div');
+																												rightCol.className = 'column';
+																												
+																												const notesTitle = document.createElement('div');
+																												notesTitle.className = 'column-title';
+																												notesTitle.textContent = 'Evidence Information';
+																												rightCol.appendChild(notesTitle);
+																												
+																												const titleInput = document.createElement('input');
+																												titleInput.type = 'text';
+																												titleInput.className = 'input-field';
+																												titleInput.placeholder = 'Evidence title...';
+																												titleInput.value = update.title;
+																												titleInput.style.fontWeight = '600';
+																												titleInput.addEventListener('input', (e) => {
+																													param.updates[index].title = e.target.value;
+																													watchers[param.updates[index].uuid].map((updater) => updater(param));
+																													});
+																													rightCol.appendChild(titleInput);
+																													
+																													const descTextarea = document.createElement('textarea');
+																													descTextarea.className = 'input-field';
+																													descTextarea.placeholder = 'Reasoning for this update...';
+																													descTextarea.value = update.description;
+																													descTextarea.style.minHeight = '180px';
+																													descTextarea.addEventListener('input', (e) => {
+																														param.updates[index].description = e.target.value;
+																														});
+																														rightCol.appendChild(descTextarea);
+																														
+																														grid.appendChild(rightCol);
+																														container.appendChild(grid);
+																														
+																														return container;
+																													}
+																													
+																													function recalculatePosteriors(param) {
+																														
+																														for (let i = 0; i < param.updates.length; i++) {
+																															const prior = i === 0 ? param.initialPrior : param.updates[i - 1].posterior;
+																															let likelihood = null;
+																															
+																															if (param.updates[i].type == 'evidence') {
+																																likelihood = param.updates[i].likelihood;
+																																
+																																} else if (param.updates[i].type == 'dependency') {
+																																	const target_uuid = param.updates[i].target;
+																																	const target = model.paramiters.get(target_uuid);
+																																	const I = param.updates[i].implication_matrix;
+																																	const M = target.numValues;
+																																	const N = param.numValues;
+																																	likelihood = new Array(N).fill(0);
+																																	for (let m=0; m<M; m++) {
+																																		for (let n=0; n<N; n++) {
+																																			likelihood[n] += target.finalPosterior[m] * I[n][m];
+																																		}
+																																	}
+																																	
+																																	} else {
+																																		console.log(`Error: Unrecognised update type ${param.updates[i].type}`);
+																																		return;
+																																	}
+																																	
+																																	param.updates[i].posterior = updatePosterior(prior, likelihood);
+																																}
+																																
+																																if (param.updates.length != 0) {
+																																	param.finalPosterior = param.updates[param.updates.length-1].posterior;
+																																	} else {
+																																		param.finalPosterior = param.initialPrior;
+																																	}
+																																}
+																																
+																																function render() {
+																																	const mainContent = document.getElementById('mainContent');
+																																	mainContent.innerHTML = '';
+																																	
+																																	// Project title sync
+																																	let active_paramiter = null;
+																																	
+																																	document.getElementById('projectTitle').value = model.projectTitle;
+																																	tab_bar = document.getElementById('tab-bar');
+																																	tab_bar.innerHTML = '';
+																																	for (const [uuid, param] of model.paramiters) {
+																																		param.updates.forEach((update) => watchers[update.uuid] = []);
+																																		button = document.createElement('button');
+																																		button.id = uuid;
+																																		button.textContent = param.name;
+																																		button.addEventListener('click', () => {model.active_paramiter = uuid; render();});
+																																		if (model.active_paramiter == uuid){
+																																			button.classList.add('active');
+																																			active_paramiter = param;
+																																		}
+																																		tab_bar.appendChild(button);
+																																	}
+																																	
+																																	button = document.createElement('button');
+																																	button.id = 'addParam';
+																																	button.classList.add('tool');
+																																	button.addEventListener('click',addParamiter);
+																																	button.textContent = '+ Add Paramiter'
+																																	tab_bar.appendChild(button);
+																																	// clear watchers
+																																	
+																																	if (active_paramiter) {
+																																		// Render initial setup
+																																		mainContent.appendChild(renderInitialSetup(active_paramiter));
+																																		
+																																		// Render updates
+																																		active_paramiter.updates.forEach((update, index) => {
+																																			if (update.type == 'evidence') {mainContent.appendChild(renderEvidenceRow(active_paramiter, update, index));}
+																																			if (update.type == 'dependency') {mainContent.appendChild(renderDependencyRow(active_paramiter, update, index));}
+																																			});
+																																			
+																																			// Add evidence button
+																																			const addContainer = document.createElement('div');
+																																			addContainer.className = 'add-update-container';
+																																			const addBtnE = document.createElement('button');
+																																			addBtnE.className = 'btn btn-add';
+																																			addBtnE.textContent = '+ Add Evidence';
+																																			addBtnE.style.margin = '5px';
+																																			addBtnE.onclick = () => addEvidence(active_paramiter);
+																																			addContainer.appendChild(addBtnE);
+																																			
+																																			// Add Dependency button
+																																			addContainer.className = 'add-update-container';
+																																			const addBtnC = document.createElement('button');
+																																			addBtnC.className = 'btn btn-add';
+																																			addBtnC.textContent = '+ Add Dependence';
+																																			addBtnC.style.margin = '5px';
+																																			addBtnC.onclick = () => addDependency(active_paramiter);
+																																			addContainer.appendChild(addBtnC);
+																																			
+																																			mainContent.appendChild(addContainer);
+																																			
+																																			} else {
+																																				addParamiter();
+																																				render();
+																																			}
+																																		}
+																																		
+																																		function addEvidence(param) {
+																																			const prevPosterior = param.updates.length > 0
+																																			? param.updates[param.updates.length - 1].posterior
+																																			: param.initialPrior;
+																																			
+																																			const newEvidence = {
+																																				type: 'evidence',
+																																				title: `Evidence ${param.updates.length + 1}`,
+																																				description: '',
+																																				likelihood: new Array(param.numValues).fill(1),
+																																				posterior: prevPosterior,
+																																				uuid: crypto.randomUUID(),
+																																				};
+																																				
+																																				watchers[newEvidence.uuid] = [];
+																																				
+																																				param.updates.push(newEvidence);
+																																				render();
+																																			}
+																																			
+																																			function addDependency(param){
+																																				const prevPosterior = param.updates.length > 0
+																																				? param.updates[param.updates.length - 1].posterior
+																																				: param.initialPrior;
+																																				
+																																				const Dependency = {
+																																					type: 'dependency',
+																																					target: null, // uuid of the target paramiter
+																																					implication_matrix: undefined, // NxM matrix where N is the number of values of the paramiter in the current paramiter, and M are thoes in the target paramiter
+																																					description: '',
+																																					posterior: prevPosterior,
+																																					uuid: crypto.randomUUID(),
+																																					};
+																																					watchers[Dependency.uuid] = [];
+																																					param.updates.push(Dependency);
+																																					render();
+																																				}
+																																				
+																																				let paramiter_count = 0;
+																																				function addParamiter() {
+																																					paramiter_count += 1;
+																																					const uuid = crypto.randomUUID();
+																																					const newParamiter = {
+																																						uuid: uuid,
+																																						name: `P-${paramiter_count}`,
+																																						numValues: 5,
+																																						initialPrior: [0.2, 0.2, 0.2, 0.2, 0.2],
+																																						finalPosterior: [0.2, 0.2, 0.2, 0.2, 0.2],
+																																						description: '',
+																																						updates: []
+																																					}
+																																					model.paramiters.set(uuid, newParamiter);
+																																					model.active_paramiter = uuid;
+																																					render();
+																																				}
+																																				
+																																				// Event listeners
+																																				document.getElementById('projectTitle').addEventListener('input', (e) => {
+																																					model.projectTitle = e.target.value;
+																																					});
+																																					
+																																					document.getElementById('viewModeBtn').addEventListener('click', () => {
+																																						model.display_mode = model.display_mode == 'graph' ? 'table' : 'graph';
+																																						render();
+																																						});
+																																						
+																																						document.getElementById('copyBtn').addEventListener('click', () => {
+																																							navigator.clipboard.writeText(JSON.stringify(model, (key, value) => {
+																																								return (value instanceof Map) ? Array.from(value.entries()) : value;
+																																								}, 2));
+																																								});
+																																								
+																																								document.getElementById('pasteBtn').addEventListener('click', async () => {
+																																									try {
+																																										const text = await navigator.clipboard.readText();
+																																										model = JSON.parse(text);
+																																										model.paramiters = new Map(model.paramiters);
+																																										model.paramiters.get(model.active_paramiter).updates.forEach((update) => watchers[update.uuid] = []);
+																																										render();
+																																										} catch (e) {
+																																											alert('Error loading from clipboard. Make sure you copied valid data.');
+																																											console.log(e)
+																																										}
+																																										});
+																																										
+																																										document.getElementById('resetBtn').addEventListener('click', () => {
+																																											if (confirm('Reset to a new project? This will clear all data.')) {
+																																												model = initial_model;
+																																												render();
+																																												} else {
+																																													console.log('Reset declined by user');
+																																												}
+																																												});
+																																												
+																																												// Global mouse handling for dragging
+																																												document.addEventListener('mousemove', (e) => {
+																																													if (!dragState) return;
+																																													
+																																													const rect = dragState.svg.getBoundingClientRect();
+																																													const x = e.clientX - rect.left;
+																																													const y = e.clientY - rect.top;
+																																													const value = Math.min(1, Math.max(0, dragState.data[dragState.index] + (dragState.y - y) / 200));
+																																													
+																																													if (dragState.isShift) {
+																																														const newData = [...dragState.data];
+																																														for (let i = 0; i < dragState.data.length; i++) {
+																																															const pointX = dragState.scaleX(i);
+																																															const prevPointX = i > 0 ? dragState.scaleX(i - 1) :
+																																															dragState.scaleX(0) - (dragState.scaleX(1) - dragState.scaleX(0));
+																																															const nextPointX = i < dragState.data.length - 1 ? dragState.scaleX(i + 1) :
+																																															dragState.scaleX(dragState.data.length - 1) +
+																																															(dragState.scaleX(dragState.data.length - 1) - dragState.scaleX(dragState.data.length - 2));
+																																															
+																																															if (x >= (prevPointX + pointX) / 2 && x < (pointX + nextPointX) / 2) {
+																																																newData[i] = value;
+																																															}
+																																														}
+																																														dragState.onChange(newData);
+																																														} else {
+																																															const newData = [...dragState.data];
+																																															newData[dragState.index] = value;
+																																															dragState.onChange(newData);
+																																														}
+																																														});
+																																														
+																																														document.addEventListener('mouseup', () => {
+																																															dragState = null;
+																																															});
+																																															
+																																															document.addEventListener('keydown', (e) => {
+																																																if (e.key === 'Shift') isShiftPressed = true;
+																																																});
+																																																
+																																																document.addEventListener('keyup', (e) => {
+																																																	if (e.key === 'Shift') isShiftPressed = false;
+																																																	});
+																																																	
+																																																	// Initial render
+																																																	render();
+		</script>
+	</body>
 </html>
