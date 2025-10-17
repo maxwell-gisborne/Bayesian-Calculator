@@ -273,6 +273,45 @@
 				text-align: center;
 				min-height: 200px;
 			}
+			
+			.data-table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 0.875rem;
+				margin-top: 0.5rem;
+			}
+			
+			.data-table th {
+				background: #f3f4f6;
+				padding: 0.75rem;
+				text-align: left;
+				font-weight: 600;
+				color: #374151;
+				border-bottom: 2px solid #d1d5db;
+			}
+			
+			.data-table td {
+				padding: 0.5rem 0.75rem;
+				border-bottom: 1px solid #e5e7eb;
+			}
+			
+			.data-table tr:hover {
+				background: #f9fafb;
+			}
+			
+			.data-table input[type="number"] {
+				width: 100%;
+				padding: 0.25rem 0.5rem;
+				border: 1px solid #d1d5db;
+				border-radius: 0.25rem;
+				font-size: 0.875rem;
+			}
+			
+			.data-table input[type="number"]:focus {
+				outline: none;
+				border-color: #2563eb;
+				box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+			}
 		</style>
 	</head>
 	<body>
@@ -361,23 +400,28 @@
 						
 						function renderTable(container, data, name, title, editable, normalize, onChange){
 							const table = container.appendChild(document.createElement('table'));
+							table.className = 'data-table';
 							const header = table.appendChild(document.createElement('tr'));
 							header.innerHTML = `<th>${name}</th><th>${title}</th>`;
 							for (let n=0; n<data.length; n++){
 								let row = table.appendChild(document.createElement('tr'));
 								if (!editable) {
 									console.log('normal table row');
-									row.innerHTML = `<td>${n}</td> <td>${data[n]}</td>`;
+									row.innerHTML = `<td><strong>${n}</strong></td><td>${(data[n] * 100).toFixed(2)}%</td>`;
+									
 									} else {
 										console.log('editable table row');
 										const value = row.appendChild(document.createElement('td'));
-										value.textContent = `${n}`;
-										const prob = row.appendChild(document.createElement('input'));
+										value.innerHTML = `<strong>${n}</strong>`;
+										const probCell = row.appendChild(document.createElement('td'));
+										const prob = probCell.appendChild(document.createElement('input'));
+										
 										prob.setAttribute('type', 'number');
 										prob.setAttribute('min', '0');
 										prob.setAttribute('max', '1');
-										prob.setAttribute('step', '0.01');
-										prob.value = data[n];
+										prob.setAttribute('step', '0.001');
+										prob.value = data[n].toFixed(4);
+										
 										prob.addEventListener('change',(change) => {
 											let newval = Number(change.target.value);
 											if (!normalize) {
