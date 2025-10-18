@@ -633,211 +633,275 @@
 																	});
 																	leftCol.appendChild(paramInput);
 																	
-																	const numLabel = document.createElement('label');
-																	numLabel.textContent = 'Number of Values:';
-																	numLabel.style.display = 'block';
-																	numLabel.style.fontSize = '0.875rem';
-																	numLabel.style.marginBottom = '0.25rem';
-																	leftCol.appendChild(numLabel);
+																	<!-- const numLabel = document.createElement('label'); -->
+																	<!-- numLabel.textContent = 'Number of Values:'; -->
+																	<!-- numLabel.style.display = 'block'; -->
+																	<!-- numLabel.style.fontSize = '0.875rem'; -->
+																	<!-- numLabel.style.marginBottom = '0.25rem'; -->
+																	<!-- leftCol.appendChild(numLabel); -->
 																	
-																	const numInput = document.createElement('input');
-																	numInput.type = 'number';
-																	numInput.className = 'input-field';
-																	numInput.min = '2';
-																	numInput.value = param.numValues;
-																	numInput.addEventListener('input', (e) => {
-																		const n = Math.max(2, Math.min(20, parseInt(e.target.value) || 2));
-																		param.numValues = n;
-																		param.initialPrior = new Array(n).fill(1 / n);
-																		param.updates = [];
-																		numInput.setAttribute('data-prompt', 'true');
+																	<!-- const numInput = document.createElement('input'); -->
+																	<!-- numInput.type = 'number'; -->
+																	<!-- numInput.className = 'input-field'; -->
+																	<!-- numInput.min = '2'; -->
+																	<!-- numInput.value = param.numValues; -->
+																	<!-- numInput.addEventListener('input', (e) => { -->
+																	<!-- const n = Math.max(2, Math.min(20, parseInt(e.target.value) || 2)); -->
+																	<!-- param.numValues = n; -->
+																	<!-- param.initialPrior = new Array(n).fill(1 / n); -->
+																	<!-- param.updates = []; -->
+																	<!-- numInput.setAttribute('data-prompt', 'true'); -->
+																	<!-- }); -->
+																	<!-- numInput.addEventListener('keydown', (event) => { -->
+																	<!-- if (event.key == 'Enter') { -->
+																	<!-- numInput.removeAttribute('data-prompt'); -->
+																	<!-- recalculateAllPosteriors(); -->
+																	<!-- render(); -->
+																	<!-- } -->
+																	<!-- }); -->
+																	
+																	<!-- leftCol.appendChild(numInput); -->
+																	
+																	const graphContainer = document.createElement('div');
+																	renderData(graphContainer, param.valueNames, param.initialPrior, param.name, 'Prior', true, true, (newPrior) => {
+																		param.initialPrior = newPrior;
+																		recalculateAllPosteriors();
+																		render();
 																		});
-																		numInput.addEventListener('keydown', (event) => {
-																			if (event.key == 'Enter') {
-																				numInput.removeAttribute('data-prompt');
-																				recalculateAllPosteriors();
-																				render();
-																			}
-																			});
+																		leftCol.appendChild(graphContainer);
+																		
+																		grid.appendChild(leftCol);
+																		
+																		// Middle column: Empty
+																		const midCol = grid.appendChild(document.createElement('div'));
+																		midCol.className = 'column';
+																		const emptyDiv = midCol.appendChild(document.createElement('div'));
+																		const nameTable = emptyDiv.appendChild(document.createElement('table'));
+																		nameTable.className = 'data-table';
+																		const param_table_header = nameTable.appendChild(document.createElement('tr'));
+																		const param_table_header_title = param_table_header.appendChild(document.createElement('th'));
+																		param_table_header_title.textContent = "Paramiter Values";
+																		for (let n = 0; n<param.numValues; n++) {
+																			const row = nameTable.appendChild(document.createElement('tr'));
+																			const cell = row.appendChild(document.createElement('td'));
+																			cell.style.display='flex';
 																			
-																			leftCol.appendChild(numInput);
-																			
-																			const graphContainer = document.createElement('div');
-																			renderData(graphContainer, param.valueNames, param.initialPrior, param.name, 'Prior', true, true, (newPrior) => {
-																				param.initialPrior = newPrior;
-																				recalculateAllPosteriors();
-																				render();
+																			const input = cell.appendChild(document.createElement('input'));
+																			input.className = 'input-field';
+																			input.value = param.valueNames[n];
+																			input.addEventListener('input', (e) => {
+																				param.valueNames[n] = e.target.value;
+																				input.setAttribute('data-prompt', 'true');
 																				});
-																				leftCol.appendChild(graphContainer);
 																				
-																				grid.appendChild(leftCol);
-																				
-																				// Middle column: Empty
-																				const midCol = grid.appendChild(document.createElement('div'));
-																				midCol.className = 'column';
-																				const emptyDiv = midCol.appendChild(document.createElement('div'));
-																				const nameTable = emptyDiv.appendChild(document.createElement('table'));
-																				nameTable.className = 'data-table';
-																				const param_table_header = nameTable.appendChild(document.createElement('tr'));
-																				const param_table_header_title = param_table_header.appendChild(document.createElement('th'));
-																				param_table_header_title.textContent = "Paramiter Values";
-																				for (let n = 0; n<param.numValues; n++) {
-																					const row = nameTable.appendChild(document.createElement('tr'));
-																					const cell = row.appendChild(document.createElement('td'));
-																					const input = cell.appendChild(document.createElement('input'));
-																					input.className = 'input-field';
-																					input.value = param.valueNames[n];
-																					input.addEventListener('input', (e) => {
-																						param.valueNames[n] = e.target.value;
-																						input.setAttribute('data-prompt', 'true');
-																						});
-																						
-																						input.addEventListener('keydown', (event) => {
-																							if (event.key == 'Enter') {
-																								input.removeAttribute('data-prompt');
-																								render();
+																				input.addEventListener('keydown', (event) => {
+																					if (event.key == 'Enter') {
+																						input.removeAttribute('data-prompt');
+																						render();
+																					}
+																					});
+																					
+																					if (param.numValues > 2) {
+																						const valDelBtn_cell = row.appendChild(document.createElement('td'));
+																						const ValDelBtn = cell.appendChild(document.createElement('h1'));
+																						ValDelBtn.className = 'delete-btn';
+																						ValDelBtn.style.position='unset';
+																						ValDelBtn.textContent = '×';
+																						ValDelBtn.onclick = () => {
+																							param.numValues -= 1;
+																							param.valueNames.splice(n,1);
+																							param.initialPrior.splice(n,1);
+																							param.finalPosterior.splice(n,1);
+																							for (let m=0; m<param.updates.length; m++){
+																								if (param.updates[m].type == 'evidence'){
+																									param.updates[m].likelihood.splice(n,1);
+																								}
+																								if (param.updates[m].type == 'dependency'){
+																									implication_matrix.forEach(v => v.splice(n,1));
+																								}
 																							}
-																							});
+																							recalculateAllPosteriors();
+																							render();
+																							
+																							};
 																						}
 																						
-																						// Right column: Description
-																						const rightCol = document.createElement('div');
-																						rightCol.className = 'column';
-																						
-																						const descTitle = document.createElement('div');
-																						descTitle.className = 'column-title';
-																						descTitle.textContent = 'Description';
-																						rightCol.appendChild(descTitle);
-																						
-																						const descTextarea = document.createElement('textarea');
-																						descTextarea.className = 'input-field';
-																						descTextarea.placeholder = 'Describe your analysis...';
-																						descTextarea.value = param.description;
-																						descTextarea.style.minHeight = '250px';
-																						descTextarea.addEventListener('input', (e) => {
-																							param.description = e.target.value;
-																							});
-																							rightCol.appendChild(descTextarea);
-																							
-																							grid.appendChild(rightCol);
-																							container.appendChild(grid);
-																							
-																							return container;
+																					}
+																					
+																					const addValue = midCol.appendChild(document.createElement('button'));
+																					addValue.textContent = '+ Add Value';
+																					addValue.id = 'addValue';
+																					addValue.className = 'btn btn-add';
+																					addValue.style.margin = '5px';
+																					addValue.onclick = () => {
+																						console.log('A', param.initialPrior);
+																						param.numValues += 1;
+																						param.valueNames.push('');
+																						param.initialPrior.push(0);
+																						param.finalPosterior.push(0);
+																						for (let m=0; m<param.updates.length; m++){
+																							if (param.updates[m].type == 'evidence'){
+																								param.updates[m].likelihood.push(1);
+																							}
+																							if (param.updates[m].type == 'dependency'){
+																								param.updates[m].implication_matrix.forEach(v => v.push(1));
+																							}
 																						}
+																						recalculateAllPosteriors();
+																						console.log('B', param.initialPrior);
+																						render();
+																					}
+																					
+																					// Right column: Description
+																					const rightCol = document.createElement('div');
+																					rightCol.className = 'column';
+																					
+																					const descTitle = document.createElement('div');
+																					descTitle.className = 'column-title';
+																					descTitle.textContent = 'Description';
+																					rightCol.appendChild(descTitle);
+																					
+																					const descTextarea = document.createElement('textarea');
+																					descTextarea.className = 'input-field';
+																					descTextarea.placeholder = 'Describe your analysis...';
+																					descTextarea.value = param.description;
+																					descTextarea.style.minHeight = '250px';
+																					descTextarea.addEventListener('input', (e) => {
+																						param.description = e.target.value;
+																						});
+																						rightCol.appendChild(descTextarea);
 																						
-																						function hasCyclicDependency(fromUuid, toUuid) {
-																							const visited = new Set();
-																							const recursionStack = new Set();
+																						grid.appendChild(rightCol);
+																						container.appendChild(grid);
+																						
+																						return container;
+																					}
+																					
+																					function hasCyclicDependency(fromUuid, toUuid) {
+																						const visited = new Set();
+																						const recursionStack = new Set();
+																						
+																						function detectCycle(uuid) {
+																							if (recursionStack.has(uuid)) return true;
+																							if (visited.has(uuid)) return false;
 																							
-																							function detectCycle(uuid) {
-																								if (recursionStack.has(uuid)) return true;
-																								if (visited.has(uuid)) return false;
-																								
-																								visited.add(uuid);
-																								recursionStack.add(uuid);
-																								
-																								const param_of_uuid = model.paramiters.get(uuid);
-																								if (param_of_uuid) {
-																									for (const update of param_of_uuid.updates) {
-																										if (update.type === 'dependency' && update.target) {
-																											if (detectCycle(update.target)) return true;
-																										}
+																							visited.add(uuid);
+																							recursionStack.add(uuid);
+																							
+																							const param_of_uuid = model.paramiters.get(uuid);
+																							if (param_of_uuid) {
+																								for (const update of param_of_uuid.updates) {
+																									if (update.type === 'dependency' && update.target) {
+																										if (detectCycle(update.target)) return true;
 																									}
 																								}
-																								
-																								recursionStack.delete(uuid);
-																								return false;
 																							}
 																							
-																							return detectCycle(toUuid) || (toUuid === fromUuid);
+																							recursionStack.delete(uuid);
+																							return false;
 																						}
 																						
-																						function renderDependencyRow(param, update, index){
+																						return detectCycle(toUuid) || (toUuid === fromUuid);
+																					}
+																					
+																					function renderDependencyRow(param, update, index){
+																						
+																						const container = document.createElement('div');
+																						const headercard = document.createElement('div');
+																						headercard.className = 'row-card';
+																						
+																						const deleteBtn = document.createElement('button');
+																						deleteBtn.className = 'delete-btn';
+																						deleteBtn.textContent = '✕';
+																						deleteBtn.onclick = () => {
+																							param.updates.splice(index, 1);
+																							render();
+																							};
+																							headercard.appendChild(deleteBtn);
 																							
-																							const container = document.createElement('div');
-																							const headercard = document.createElement('div');
-																							headercard.className = 'row-card';
+																							const header = document.createElement('div');
+																							header.className = 'row-header';
 																							
-																							const deleteBtn = document.createElement('button');
-																							deleteBtn.className = 'delete-btn';
-																							deleteBtn.textContent = '✕';
-																							deleteBtn.onclick = () => {
-																								param.updates.splice(index, 1);
-																								render();
-																								};
-																								headercard.appendChild(deleteBtn);
-																								
-																								const header = document.createElement('div');
-																								header.className = 'row-header';
-																								
-																								set_dependency_target = (new_param) => {
-																									if (new_param.updates[index].target) {
-																										let target_uuid = new_param.updates[index].target;
-																										let target = model.paramiters.get(target_uuid);
-																										header.innerHTML= `<strong>Dependence on </strong> <i>${target.name}</i>`;
-																										} else {
-																											header.textContent = "";
-																											const selector = document.createElement('ul');
-																											for (const [uuid, param] of model.paramiters) {
-																												if (uuid == new_param.uuid) { continue; }
-																												if (hasCyclicDependency(new_param.uuid, uuid)) {continue;}
-																												const item = document.createElement('button');
-																												item.textContent = param.name;
-																												item.value = uuid;
-																												item.onclick = () => {
-																													new_param.updates[index].target = uuid;
-																													new_param.updates[index].implication_matrix = Array.from(Array(new_param.numValues), () => new Array(model.paramiters.get(uuid).numValues).fill(1.0));
-																													recalculateAllPosteriors();
-																													render();
-																												}
-																												selector.appendChild(item);
-																												};
-																												header.replaceChildren(selector);
-																												};};
-																												watchers[param.updates[index].uuid].push(set_dependency_target);
-																												set_dependency_target(param);
-																												
-																												headercard.appendChild(header);
-																												
-																												if (update.target == null) {return headercard;}
-																												
-																												const target_uuid = update.target;
-																												const target = model.paramiters.get(target_uuid);
-																												
-																												const grid = document.createElement('div');
-																												grid.className = 'row-grid';
-																												
-																												const leftCol = document.createElement('div');
-																												
-																												const posteriorTitle = document.createElement('div');
-																												posteriorTitle.className = 'column-title';
-																												posteriorTitle.textContent = 'Prior → Posterior';
-																												leftCol.appendChild(posteriorTitle);
-																												
-																												const posteriorheadercard = document.createElement('div');
-																												renderData(posteriorheadercard, param.valueNames, update.posterior, param.name, 'Posterior', false, false, null);
-																												leftCol.appendChild(posteriorheadercard);
-																												
-																												grid.appendChild(leftCol);
-																												
-																												const middleCol = document.createElement('div');
-																												
-																												const posteriorDependencieTitle = document.createElement('div');
-																												posteriorDependencieTitle.className = 'column-title';
-																												posteriorDependencieTitle.textContent = 'Posterior Dependencie';
-																												middleCol.appendChild(posteriorDependencieTitle);
-																												
-																												const posteriorDependencieheadercard = document.createElement('div');
-																												renderData(posteriorDependencieheadercard, target.valueNames, target.finalPosterior, target.name, `${target.name} Posterior`, false, false, null);
-																												middleCol.appendChild(posteriorDependencieheadercard);
-																												
-																												grid.appendChild(middleCol);
-																												
-																												const rightCol = document.createElement('div');
-																												grid.appendChild(rightCol);
-																												
-																												headercard.appendChild(grid);
-																												container.appendChild(headercard);
+																							set_dependency_target = (new_param) => {
+																								if (new_param.updates[index].target) {
+																									let target_uuid = new_param.updates[index].target;
+																									let target = model.paramiters.get(target_uuid);
+																									header.innerHTML= `<strong>Dependence on </strong> <i>${target.name}</i>`;
+																									} else {
+																										header.textContent = "";
+																										const selector = document.createElement('ul');
+																										for (const [uuid, param] of model.paramiters) {
+																											if (uuid == new_param.uuid) { continue; }
+																											if (hasCyclicDependency(new_param.uuid, uuid)) {continue;}
+																											const item = document.createElement('button');
+																											item.className = 'btn btn-add';
+																											item.textContent = param.name;
+																											item.value = uuid;
+																											item.onclick = () => {
+																												new_param.updates[index].target = uuid;
+																												new_param.updates[index].implication_matrix = Array.from(Array(new_param.numValues), () => new Array(model.paramiters.get(uuid).numValues).fill(0.5));
+																												recalculateAllPosteriors();
+																												render();
+																											}
+																											selector.appendChild(item);
+																											};
+																											header.replaceChildren(selector);
+																											};};
+																											watchers[param.updates[index].uuid].push(set_dependency_target);
+																											set_dependency_target(param);
+																											
+																											headercard.appendChild(header);
+																											
+																											if (update.target == null) {return headercard;}
+																											container.appendChild(headercard);
+																											
+																											const target_uuid = update.target;
+																											const target = model.paramiters.get(target_uuid);
+																											
+																											const grid = headercard.appendChild(document.createElement('div'));
+																											grid.className = 'row-grid';
+																											
+																											const leftCol = document.createElement('div');
+																											
+																											const posteriorTitle = document.createElement('div');
+																											posteriorTitle.className = 'column-title';
+																											posteriorTitle.textContent = 'Prior → Posterior';
+																											leftCol.appendChild(posteriorTitle);
+																											
+																											const posteriorheadercard = document.createElement('div');
+																											renderData(posteriorheadercard, param.valueNames, update.posterior, param.name, 'Posterior', false, false, null);
+																											leftCol.appendChild(posteriorheadercard);
+																											
+																											grid.appendChild(leftCol);
+																											
+																											const middleCol = document.createElement('div');
+																											
+																											const posteriorDependencieTitle = document.createElement('div');
+																											posteriorDependencieTitle.className = 'column-title';
+																											posteriorDependencieTitle.textContent = 'Posterior Dependencie';
+																											middleCol.appendChild(posteriorDependencieTitle);
+																											
+																											const posteriorDependencieheadercard = document.createElement('div');
+																											renderData(posteriorDependencieheadercard, target.valueNames, target.finalPosterior, target.name, `${target.name} Posterior`, false, false, null);
+																											middleCol.appendChild(posteriorDependencieheadercard);
+																											
+																											grid.appendChild(middleCol);
+																											
+																											const rightCol = grid.appendChild(document.createElement('div'));
+																											const descTitle = document.createElement('div');
+																											descTitle.className = 'column-title';
+																											descTitle.textContent = 'Description';
+																											rightCol.appendChild(descTitle);
+																											
+																											const descTextarea = rightCol.appendChild(document.createElement('textarea'));
+																											descTextarea.className = 'input-field';
+																											descTextarea.placeholder = 'Describe your analysis...';
+																											descTextarea.value = update.description;
+																											descTextarea.style.minHeight = '250px';
+																											descTextarea.addEventListener('input', (e) => {
+																												update.description = e.target.value;
+																												/// todo
+																												});
 																												
 																												for (let n=0; n < target.numValues; n++ ){
 																													const implication_card = document.createElement('div');
@@ -847,7 +911,7 @@
 																													const header = document.createElement('div');
 																													implication_card.appendChild(header);
 																													header.className = 'row-header';
-																													header.textContent = `Implication of ${target.name} = ${n}`
+																													header.textContent = `Implication of ${target.name} = ${target.valueNames[n]}`
 																													
 																													const grid = document.createElement('grid');
 																													implication_card.appendChild(grid);
@@ -1012,8 +1076,10 @@
 																																					const M = target.numValues;
 																																					const N = param.numValues;
 																																					likelihood = new Array(N).fill(0);
+																																					console.log(N,M,I);
 																																					for (let m=0; m<M; m++) {
 																																						for (let n=0; n<N; n++) {
+																																							console.log(n,m);
 																																							likelihood[n] += target.finalPosterior[m] * I[n][m];
 																																						}
 																																					}
@@ -1029,7 +1095,7 @@
 																																				if (param.updates.length != 0) {
 																																					param.finalPosterior = param.updates[param.updates.length-1].posterior;
 																																					} else {
-																																						param.finalPosterior = param.initialPrior;
+																																						param.finalPosterior = [...param.initialPrior];
 																																						
 																																					}
 																																					watchers[param.uuid]?.forEach(updater => updater(param));
@@ -1113,7 +1179,7 @@
 																																								type: 'evidence',
 																																								title: `Evidence ${param.updates.length + 1}`,
 																																								description: '',
-																																								likelihood: new Array(param.numValues).fill(1),
+																																								likelihood: new Array(param.numValues).fill(0.5),
 																																								posterior: prevPosterior,
 																																								uuid: crypto.randomUUID(),
 																																								};
@@ -1130,7 +1196,7 @@
 																																								? param.updates[param.updates.length - 1].posterior
 																																								: param.initialPrior;
 																																								
-																																								const Dependency = {
+																																								const newDependency = {
 																																									type: 'dependency',
 																																									target: null, // uuid of the target paramiter
 																																									implication_matrix: undefined, // NxM matrix where N is the number of values of the paramiter in the current paramiter, and M are thoes in the target paramiter
@@ -1138,8 +1204,9 @@
 																																									posterior: prevPosterior,
 																																									uuid: crypto.randomUUID(),
 																																									};
-																																									watchers[Dependency.uuid] = [];
-																																									param.updates.push(Dependency);
+																																									
+																																									watchers[newDependency.uuid] = [];
+																																									param.updates.push(newDependency);
 																																									recalculateAllPosteriors();
 																																									render();
 																																								}
@@ -1151,10 +1218,10 @@
 																																									const newParamiter = {
 																																										uuid: uuid,
 																																										name: `P-${paramiter_count}`,
-																																										numValues: 5,
-																																										valueNames: ['0','1','2','3','4'],
-																																										initialPrior: [0.2, 0.2, 0.2, 0.2, 0.2],
-																																										finalPosterior: [0.2, 0.2, 0.2, 0.2, 0.2],
+																																										numValues: 2,
+																																										valueNames: ['H1','H2'],
+																																										initialPrior: [0.5, 0.5],
+																																										finalPosterior: [0.5, 0.5],
 																																										description: '',
 																																										updates: []
 																																									}
