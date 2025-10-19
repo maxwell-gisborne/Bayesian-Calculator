@@ -353,8 +353,8 @@
 		function normalizer(arr) {
 			const sum = arr.reduce((a, b) => a + b, 0);
 			return arr.map(v => v / sum);
-					< !-- return sum > 0 ? arr.map(v => v / sum) : arr; -->
-				}
+			//< !-- return sum > 0 ? arr.map(v => v / sum) : arr; -->
+		}
 
 		function updatePosterior(prior, likelihood) {
 			const unnormalized = prior.map((p, i) => p * likelihood[i]);
@@ -634,38 +634,38 @@
 				}
 			});
 			leftCol.appendChild(paramInput);
-																	
-																	< !-- const numLabel = document.createElement('label'); -->
-																	< !--numLabel.textContent = 'Number of Values:'; -->
-																	< !--numLabel.style.display = 'block'; -->
-																	< !--numLabel.style.fontSize = '0.875rem'; -->
-																	< !--numLabel.style.marginBottom = '0.25rem'; -->
-																	< !--leftCol.appendChild(numLabel); -->
-																	
-																	< !-- const numInput = document.createElement('input'); -->
-																	< !--numInput.type = 'number'; -->
-																	< !--numInput.className = 'input-field'; -->
-																	< !--numInput.min = '2'; -->
-																	< !--numInput.value = param.numValues; -->
-																	< !--numInput.addEventListener('input', (e) => {
+
+			//!-- const numLabel = document.createElement('label'); -->
+			//< !--numLabel.textContent = 'Number of Values:'; -->
+			//< !--numLabel.style.display = 'block'; -->
+			//< !--numLabel.style.fontSize = '0.875rem'; -->
+			//< !--numLabel.style.marginBottom = '0.25rem'; -->
+			//< !--leftCol.appendChild(numLabel); -->
+			//																	
+			//< !-- const numInput = document.createElement('input'); -->
+			//< !--numInput.type = 'number'; -->
+			//< !--numInput.className = 'input-field'; -->
+			//< !--numInput.min = '2'; -->
+			//< !--numInput.value = param.numValues; -->
+			//< !--numInput.addEventListener('input', (e) => {
+			-->
+				//< !-- const n = Math.max(2, Math.min(20, parseInt(e.target.value) || 2)); -->
+				//< !--param.numValues = n; -->
+				//< !--param.initialPrior = new Array(n).fill(1 / n); -->
+				//< !--param.updates =[]; -->
+				//< !--numInput.setAttribute('data-prompt', 'true'); -->
+				//< !-- }); -->
+				//< !--numInput.addEventListener('keydown', (event) => {
 				-->
-																	< !-- const n = Math.max(2, Math.min(20, parseInt(e.target.value) || 2)); -->
-																	< !--param.numValues = n; -->
-																	< !--param.initialPrior = new Array(n).fill(1 / n); -->
-																	< !--param.updates =[]; -->
-																	< !--numInput.setAttribute('data-prompt', 'true'); -->
-																	< !-- }); -->
-																	< !--numInput.addEventListener('keydown', (event) => {
-					-->
-																	< !-- if (event.key == 'Enter') {
-						-->
-																	< !--numInput.removeAttribute('data-prompt'); -->
-																	< !--recalculateAllPosteriors(); -->
-																	< !--render(); -->
-																	< !-- } -->
-																	< !-- }); -->
-																	
-																	< !--leftCol.appendChild(numInput); -->
+				//< !-- if (event.key == 'Enter') {
+				-->
+																	//< !--numInput.removeAttribute('data-prompt'); -->
+																	//< !--recalculateAllPosteriors(); -->
+																	//< !--render(); -->
+																	//< !-- } -->
+																	//< !-- }); -->
+//																	
+																	//< !--leftCol.appendChild(numInput); -->
 																	
 																	const graphContainer = document.createElement('div');
 			renderData(graphContainer, param.valueNames, param.initialPrior, param.name, 'Prior', true, true, (newPrior) => {
@@ -958,8 +958,7 @@
 
 			const header = document.createElement('div');
 			header.className = 'row-header';
-																														< !--header.textContent = `Evidence ${index + 1}`; -->
-				update_title = (new_param) => {header.textContent = `${new_param.updates[index].title}`};
+			update_title = (new_param) => {header.textContent = `${new_param.updates[index].title}`};
 			watchers[param.updates[index].uuid].push(update_title);
 			update_title(param);
 			container.appendChild(header);
