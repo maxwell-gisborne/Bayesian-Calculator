@@ -408,7 +408,21 @@
 			const table = container.appendChild(document.createElement('table'));
 			table.className = 'data-table';
 			const header = table.appendChild(document.createElement('tr'));
-			header.innerHTML = `<th>${name}</th><th>${title}</th>`;
+			const header_title = header.appendChild(document.createElement('th'));
+			const header_name = header.appendChild(document.createElement('th'));
+			header_title.textContent = `${title}`;
+			header_name.textContent = `${name}`;
+			if (editable) {
+				const resetBtn = header_name.appendChild(document.createElement('button'));
+				resetBtn.className = 'btn btn-secondary btn-reset';
+				resetBtn.textContent = 'reset';
+				resetBtn.style.float = 'right';
+				resetBtn.onclick = () => {
+					const uniform = new Array(data.length).fill(1 / data.length);
+					onChange(uniform);
+				};
+			}
+
 			for (let n = 0; n < data.length; n++) {
 				let row = table.appendChild(document.createElement('tr'));
 				if (!editable) {
