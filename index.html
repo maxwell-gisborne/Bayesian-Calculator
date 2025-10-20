@@ -335,9 +335,12 @@
 	<script>
 		// Model state
 
+
+		let CURRENT_SCHEMA_VERSION = '1';
 		let initial_model = {
+			schema_version: CURRENT_SCHEMA_VERSION,
 			projectTitle: 'New Bayesian Analysis',
-			display_mode: 'graph',
+			display_mode: 'table',
 			active_paramiter: null,
 			paramiters: new Map([]),
 		};
@@ -842,7 +845,8 @@
 						item.value = uuid;
 						item.onclick = () => {
 							new_param.updates[index].target = uuid;
-							new_param.updates[index].implication_matrix = Array.from(Array(new_param.numValues), () => new Array(model.paramiters.get(uuid).numValues).fill(0.5));
+							const target = model.paramiters.get(uuid);
+							new_param.updates[index].implication_matrix = Array.from(Array(target.numValues), () => new Array(new_param.numValues).fill(0.5));
 							recalculateAllPosteriors();
 							render();
 						}
@@ -1238,6 +1242,7 @@
 		});
 
 		document.getElementById('copyBtn').addEventListener('click', () => {
+			alert(`Warning! This software is indevelopment. If I change the data model old saves wont work anymore. The current schema version is: ${CURRENT_SCHEMA_VERSION}`);
 			navigator.clipboard.writeText(JSON.stringify(model, (key, value) => {
 				return (value instanceof Map) ? Array.from(value.entries()) : value;
 			}, 2));
@@ -1247,6 +1252,11 @@
 			try {
 				const text = await navigator.clipboard.readText();
 				model = JSON.parse(text);
+				if (model.schema_version != CURRENT_SCHEMA_VERSION) {
+					alert('Sorry, that data is either invalid, or out of date. I am still developing this software and I may change the underlying datastructure. If I do then saves from previos versions will be invalid. ')
+					model = initial_model;
+					return render();
+				}
 				model.paramiters = new Map(model.paramiters);
 				model.paramiters.get(model.active_paramiter).updates.forEach((update) => watchers[update.uuid] = []);
 				render();
