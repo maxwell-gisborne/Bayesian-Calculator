@@ -4,6 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="">
 	<title>🤔⚙️ Bayesian Reasoning Tool</title>
 	<style>
 		* {
@@ -752,6 +753,15 @@
 					}
 					if (param.updates[m].type == 'dependency') {
 						param.updates[m].implication_matrix.forEach(v => v.push(1));
+					}
+				}
+				for (const [foreign_uuid, foreign] of model.paramiters) {
+					if (foreign_uuid == param.uuid) {continue;}
+					for (const foreign_update of foreign.updates) {
+						if (foreign_update.type != 'dependency') {continue;}
+						if (foreign_update.target != param.uuid) {continue;}
+						console.log('Updateing foren dependency', foreign_uuid, foreign);
+						foreign_update.implication_matrix.push(Array(foreign.numValues).fill(0.5));
 					}
 				}
 				recalculateAllPosteriors();
